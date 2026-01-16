@@ -4,9 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NEXO Producciones</title>
+
+  <!-- IMPORTANTE: base para GitHub Pages -->
+  <base href="/nexo-producciones/">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/891/891399.png" type="image/png">
 </head>
+
 <body class="bg-gray-900 text-white font-sans">
 
   <!-- HEADER -->
@@ -43,14 +48,16 @@
       <p class="text-gray-300 mb-2">Alias Mercado Pago:</p>
       <p class="text-white font-semibold mb-4">pepemoli.mp</p>
 
-      <button id="confirmarCompra" class="w-full py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium">
+      <button id="confirmarCompra"
+              class="w-full py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium">
         Confirmar
       </button>
     </div>
   </div>
 
   <script>
-    const SHEET_URL = "https://opensheet.elk.sh/18eeA9-n97tamAFPmO9Do0WOiU9v9SI7QPms0P144Jic/Hoja%201";
+    const SHEET_URL =
+      "https://opensheet.elk.sh/18eeA9-n97tamAFPmO9Do0WOiU9v9SI7QPms0P144Jic/Hoja%201";
 
     const modal = document.getElementById("modal");
     const cerrarModal = document.getElementById("cerrarModal");
@@ -68,11 +75,13 @@
     }
 
     cerrarModal.onclick = () => modal.classList.add("hidden");
-    modal.onclick = (e) => { if(e.target === modal) modal.classList.add("hidden"); };
+    modal.onclick = (e) => { if (e.target === modal) modal.classList.add("hidden"); };
+
     cantidadEntradas.oninput = () => {
       const cantidad = parseInt(cantidadEntradas.value) || 1;
       montoTotalElem.textContent = (cantidad * valorActual).toFixed(2);
     };
+
     confirmarCompra.onclick = () => {
       alert(`Total a pagar: $${montoTotalElem.textContent}\nAlias: pepemoli.mp`);
       modal.classList.add("hidden");
@@ -80,16 +89,17 @@
 
     function formatearFecha(fechaStr) {
       if (!fechaStr) return "";
-      let partes;
       if (fechaStr.includes("/")) {
-        partes = fechaStr.split("/");
-        if (partes.length === 3) {
-          fechaStr = `${partes[2]}-${partes[1]}-${partes[0]}`;
-        }
+        const [d, m, y] = fechaStr.split("/");
+        fechaStr = `${y}-${m}-${d}`;
       }
-      const fechaObj = new Date(fechaStr);
-      if (isNaN(fechaObj)) return fechaStr;
-      return fechaObj.toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" });
+      const fecha = new Date(fechaStr);
+      if (isNaN(fecha)) return fechaStr;
+      return fecha.toLocaleDateString("es-AR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+      });
     }
 
     async function cargarEventos() {
@@ -110,41 +120,37 @@
           const valor = ev.valor ? parseFloat(ev.valor) : 100;
 
           const agotado = estado !== "disponible";
-          const botonTexto = agotado ? "Agotado" : "Comprar entrada";
-          const botonClase = agotado
-            ? "bg-gray-700 cursor-not-allowed"
-            : "bg-purple-600 hover:bg-purple-700";
 
           const tarjeta = document.createElement("div");
-          tarjeta.className = "bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-transform relative";
+          tarjeta.className =
+            "bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-transform";
 
           const imgWrapper = document.createElement("div");
           imgWrapper.className = "relative";
 
-          const basePath = window.location.pathname.split("/")[1];
-          img.src = imagen
-            ? `/${basePath}/${imagen}`
-            : `/${basePath}/imagenes/nexo_back.jpg`;
+          const img = document.createElement("img");
+          img.src = imagen || "imagenes/nexo_back.jpg";
           img.alt = nombre;
           img.className = "w-full h-48 object-cover bg-gray-700";
+          img.loading = "lazy";
 
           img.onerror = () => {
-          img.onerror = null;
-          // fallback absoluto a GitHub Pages
-          img.src = `/${basePath}/imagenes/nexo_back.jpg`;
+            img.onerror = null;
+            img.src = "imagenes/nexo_back.jpg";
           };
 
           imgWrapper.appendChild(img);
 
           if (agotado) {
             const badge = document.createElement("div");
-            badge.className = "absolute top-2 left-2 bg-red-600 text-white font-bold px-3 py-1 rounded-lg text-sm";
+            badge.className =
+              "absolute top-2 left-2 bg-red-600 text-white font-bold px-3 py-1 rounded-lg text-sm";
             badge.textContent = "AGOTADO";
             imgWrapper.appendChild(badge);
           }
 
-          const divContenido = document.createElement("div");
-          divContenido.className = "p-5";
+          const contenido = document.createElement("div");
+          contenido.className = "p-5";
 
           const h3 = document.createElement("h3");
           h3.className = "text-xl font-semibold text-purple-300";
@@ -155,25 +161,26 @@
           pInfo.textContent = `${formatearFecha(fecha)} — ${lugar}`;
 
           const pPrecio = document.createElement("p");
-          pPrecio.className = "text-yellow-400 font-semibold text-lg mt-2 flex items-center";
-          pPrecio.innerHTML = `💰 $${valor.toFixed(2)}`;
+          pPrecio.className = "text-yellow-400 font-semibold text-lg mt-2";
+          pPrecio.textContent = `💰 $${valor.toFixed(2)}`;
 
           const boton = document.createElement("button");
-          boton.className = `mt-4 w-full py-2 rounded-lg font-medium text-white ${botonClase}`;
-          boton.textContent = botonTexto;
+          boton.className =
+            `mt-4 w-full py-2 rounded-lg font-medium text-white ${
+              agotado ? "bg-gray-700 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700"
+            }`;
+          boton.textContent = agotado ? "Agotado" : "Comprar entrada";
+
           if (!agotado) boton.onclick = () => abrirModal(valor);
 
-          divContenido.appendChild(h3);
-          divContenido.appendChild(pInfo);
-          divContenido.appendChild(pPrecio);
-          divContenido.appendChild(boton);
-          tarjeta.appendChild(imgWrapper);
-          tarjeta.appendChild(divContenido);
+          contenido.append(h3, pInfo, pPrecio, boton);
+          tarjeta.append(imgWrapper, contenido);
           contenedor.appendChild(tarjeta);
         });
 
       } catch (error) {
-        contenedor.innerHTML = `<p class='text-red-400'>Error al cargar los eventos. Verificá la hoja pública.</p>`;
+        contenedor.innerHTML =
+          "<p class='text-red-400'>Error al cargar los eventos.</p>";
         console.error(error);
       }
     }
