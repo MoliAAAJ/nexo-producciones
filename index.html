@@ -121,15 +121,17 @@
           const imgWrapper = document.createElement("div");
           imgWrapper.className = "relative";
 
-          const img = document.createElement("img");
-          img.src = imagen ? `/${imagen}` : "/imagenes/nexo_back.jpg";  // ruta desde Sheets o local
+          const basePath = window.location.pathname.split("/")[1];
+          img.src = imagen
+            ? `/${basePath}/${imagen}`
+            : `/${basePath}/imagenes/nexo_back.jpg`;
           img.alt = nombre;
           img.className = "w-full h-48 object-cover bg-gray-700";
 
           img.onerror = () => {
           img.onerror = null;
           // fallback absoluto a GitHub Pages
-          img.src = "/imagenes/nexo_back.jpg";
+          img.src = `/${basePath}/imagenes/nexo_back.jpg`;
           };
 
           imgWrapper.appendChild(img);
