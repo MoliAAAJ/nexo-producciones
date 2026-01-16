@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXO Producciones</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/891/891399.png" type="image/png">
+</head>
+<body class="bg-gray-900 text-white font-sans">
+
+  <!-- HEADER -->
+  <header class="text-center py-8 bg-gray-950 shadow-md">
+    <h1 class="text-4xl font-bold tracking-widest text-purple-400">NEXO Producciones</h1>
+    <p class="text-gray-400 mt-2">Eventos artísticos y culturales</p>
+  </header>
+
+  <!-- CONTENEDOR DE EVENTOS -->
+  <main class="container mx-auto p-6">
+    <h2 class="text-2xl font-semibold mb-6 text-purple-300 border-b border-purple-500 pb-2">
+      Próximos eventos
+    </h2>
+    <div id="eventos" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="text-center py-6 text-sm text-gray-500 border-t border-gray-800">
+    © 2026 NEXO Producciones — Todos los derechos reservados
+  </footer>
+
+  <!-- MODAL COMPRA -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50">
+    <div class="bg-gray-800 rounded-xl w-80 p-6 relative">
+      <button id="cerrarModal" class="absolute top-2 right-2 text-gray-400 hover:text-white text-2xl">&times;</button>
+      <h3 class="text-xl font-semibold text-purple-300 mb-4">Comprar entradas</h3>
+
+      <label class="block mb-2 text-gray-400">Cantidad de entradas:</label>
+      <input id="cantidadEntradas" type="number" min="1" value="1"
+             class="w-full mb-4 p-2 rounded-lg bg-gray-700 text-white">
+
+      <p class="text-gray-300 mb-4">Total: $<span id="montoTotal">0</span></p>
+
+      <p class="text-gray-300 mb-2">Alias Mercado Pago:</p>
+      <p class="text-white font-semibold mb-4">pepemoli.mp</p>
+
+      <button id="confirmarCompra" class="w-full py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium">
+        Confirmar
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const SHEET_URL = "https://opensheet.elk.sh/18eeA9-n97tamAFPmO9Do0WOiU9v9SI7QPms0P144Jic/Hoja%201";
+
+    const modal = document.getElementById("modal");
+    const cerrarModal = document.getElementById("cerrarModal");
+    const cantidadEntradas = document.getElementById("cantidadEntradas");
+    const montoTotalElem = document.getElementById("montoTotal");
+    const confirmarCompra = document.getElementById("confirmarCompra");
+
+    let valorActual = 0;
+
+    function abrirModal(valor) {
+      valorActual = parseFloat(valor) || 100;
+      cantidadEntradas.value = 1;
+      montoTotalElem.textContent = valorActual.toFixed(2);
+      modal.classList.remove("hidden");
+    }
+
+    cerrarModal.onclick = () => modal.classList.add("hidden");
+    modal.onclick = (e) => { if(e.target === modal) modal.classList.add("hidden"); };
+    cantidadEntradas.oninput = () => {
+      const cantidad = parseInt(cantidadEntradas.value) || 1;
+      montoTotalElem.textContent = (cantidad * valorActual).toFixed(2);
+    };
+    confirmarCompra.onclick = () => {
+      alert(`Total a pagar: $${montoTotalElem.textContent}\nAlias: pepemoli.mp`);
+      modal.classList.add("hidden");
+    };
+
+    function formatearFecha(fechaStr) {
+      if (!fechaStr) return "";
+      let partes;
+      if (fechaStr.includes("/")) {
+        partes = fechaStr.split("/");
+        if (partes.length === 3) {
+          fechaStr = `${partes[2]}-${partes[1]}-${partes[0]}`;
+        }
+      }
+      const fechaObj = new Date(fechaStr);
+      if (isNaN(fechaObj)) return fechaStr;
+      return fechaObj.toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" });
+    }
+
+    async function cargarEventos() {
+      const contenedor = document.getElementById("eventos");
+      contenedor.innerHTML = "<p class='text-gray-400 animate-pulse'>Cargando eventos...</p>";
+
+      try {
+        const response = await fetch(SHEET_URL);
+        const eventos = await response.json();
+        contenedor.innerHTML = "";
+
+        eventos.forEach(ev => {
+          const nombre = ev.nombre?.trim() || "Evento sin nombre";
+          const fecha = ev.fecha || "";
+          const lugar = ev.lugar || "";
+          const imagen = ev.imagen?.trim() || "";
+          const estado = ev.estado?.toLowerCase() || "agotado";
+          const valor = ev.valor ? parseFloat(ev.valor) : 100;
+
+          const agotado = estado !== "disponible";
+          const botonTexto = agotado ? "Agotado" : "Comprar entrada";
+          const botonClase = agotado
+            ? "bg-gray-700 cursor-not-allowed"
+            : "bg-purple-600 hover:bg-purple-700";
+
+          const tarjeta = document.createElement("div");
+          tarjeta.className = "bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-transform relative";
+
+          const imgWrapper = document.createElement("div");
+          imgWrapper.className = "relative";
+
+          const img = document.createElement("img");
+          img.src = imagen || "imagenes/nexo_back.jpg";
+          img.alt = nombre;
+          img.className = "w-full h-48 object-cover bg-gray-700";
+          img.onerror = () => { img.onerror = null; img.src = "https://i.imgur.com/4AiXzf8.jpeg"; };
+
+          imgWrapper.appendChild(img);
+
+          if (agotado) {
+            const badge = document.createElement("div");
+            badge.className = "absolute top-2 left-2 bg-red-600 text-white font-bold px-3 py-1 rounded-lg text-sm";
+            badge.textContent = "AGOTADO";
+            imgWrapper.appendChild(badge);
+          }
+
+          const divContenido = document.createElement("div");
+          divContenido.className = "p-5";
+
+          const h3 = document.createElement("h3");
+          h3.className = "text-xl font-semibold text-purple-300";
+          h3.textContent = nombre;
+
+          const pInfo = document.createElement("p");
+          pInfo.className = "text-gray-400 text-sm mt-1";
+          pInfo.textContent = `${formatearFecha(fecha)} — ${lugar}`;
+
+          const pPrecio = document.createElement("p");
+          pPrecio.className = "text-yellow-400 font-semibold text-lg mt-2 flex items-center";
+          pPrecio.innerHTML = `💰 $${valor.toFixed(2)}`;
+
+          const boton = document.createElement("button");
+          boton.className = `mt-4 w-full py-2 rounded-lg font-medium text-white ${botonClase}`;
+          boton.textContent = botonTexto;
+          if (!agotado) boton.onclick = () => abrirModal(valor);
+
+          divContenido.appendChild(h3);
+          divContenido.appendChild(pInfo);
+          divContenido.appendChild(pPrecio);
+          divContenido.appendChild(boton);
+          tarjeta.appendChild(imgWrapper);
+          tarjeta.appendChild(divContenido);
+          contenedor.appendChild(tarjeta);
+        });
+
+      } catch (error) {
+        contenedor.innerHTML = `<p class='text-red-400'>Error al cargar los eventos. Verificá la hoja pública.</p>`;
+        console.error(error);
+      }
+    }
+
+    cargarEventos();
+  </script>
+
+</body>
+</html>
