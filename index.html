@@ -110,7 +110,7 @@
     function abrirModal(valor) {
       valorActual = parseFloat(valor) || 100;
       cantidadEntradas.value = 1;
-      montoTotalElem.textContent = valorActual.toFixed(2);
+      montoTotalElem.textContent = valorActual.toLocaleString("es-AR");
       modal.classList.remove("hidden");
     }
 
@@ -119,7 +119,7 @@
 
     cantidadEntradas.oninput = () => {
       const cantidad = parseInt(cantidadEntradas.value) || 1;
-      montoTotalElem.textContent = (cantidad * valorActual).toFixed(2);
+      montoTotalElem.textContent = (cantidad * valorActual).toLocaleString("es-AR");
     };
 
     confirmarCompra.onclick = () => {
