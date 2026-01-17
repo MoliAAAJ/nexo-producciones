@@ -202,7 +202,7 @@
 
           const pPrecio = document.createElement("p");
           pPrecio.className = "text-yellow-400 font-semibold text-lg mt-2";
-          pPrecio.textContent = `💰 $${valor.toFixed(2)}`;
+          pPrecio.textContent = `💰 $${valor.toLocaleString("es-AR")}`;
 
           const boton = document.createElement("button");
           boton.className =
