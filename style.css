@@ -1,0 +1,49 @@
+/* Modal base */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-content {
+  background: #1f2937;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  width: 20rem;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  font-size: 1.5rem;
+  color: #9ca3af;
+}
+
+.modal-close:hover {
+  color: white;
+}
+
+.modal-title {
+  color: #c084fc;
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.modal-btn {
+  margin-top: 1rem;
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: #7c3aed;
+  color: white;
+}
+
+.modal-btn:hover {
+  background: #6d28d9;
+}
