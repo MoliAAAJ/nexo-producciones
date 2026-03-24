@@ -10,8 +10,6 @@ El proyecto está desarrollado como un **sitio estático**, optimizado para **Gi
 
 👉 https://moliaaaj.github.io/nexo-producciones/
 
-*(Reemplazar `TU-USUARIO` por el usuario real de GitHub)*
-
 ---
 
 ## 🧱 Estructura del proyecto
