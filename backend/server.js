@@ -8,12 +8,28 @@ dotenv.config();
 
 const app = express();
 
+// 🔒 CORS CONFIGURADO
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://127.0.0.1:5500",
+      "https://nexoesquel.com",
+      "https://www.nexoesquel.com"
+    ]
+  })
+);
+
 // middlewares
-app.use(cors());
 app.use(express.json());
 
 // conectar DB
 connectDB();
+
+// health check (clave para deploy)
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
 
 // test route
 app.get("/", (req, res) => {
@@ -25,12 +41,9 @@ app.get("/eventos", async (req, res) => {
   try {
     const eventos = await Evento.find();
 
-    console.log("📦 DB actual:", Evento.db.name);
-    console.log("📊 Cantidad de eventos:", eventos.length);
-
     res.json(eventos);
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error en /eventos:", error.message);
     res.status(500).json({ error: "Error al obtener eventos" });
   }
 });

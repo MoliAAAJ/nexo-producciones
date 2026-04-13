@@ -1,37 +1,91 @@
 import mongoose from "mongoose";
 
 const itemSchema = new mongoose.Schema({
-  tipo: String,
-  cantidad: Number,
-  precio_unitario: Number
-});
-
-const ordenSchema = new mongoose.Schema({
-  evento_id: {
+  entrada_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Evento",
     required: true
   },
-
-  cliente: {
-    nombre: String,
-    apellido: String,
-    dni: String,
-    email: String
-  },
-
-  items: [itemSchema],
-
-  total: Number,
-
-  estado: {
+  tipo: {
     type: String,
-    enum: ["pendiente", "pagado", "cancelado"],
-    default: "pendiente"
+    required: true,
+    trim: true
   },
+  cantidad: {
+    type: Number,
+    required: true,
+    min: 1
+  },
+  precio_unitario: {
+    type: Number,
+    required: true,
+    min: 1
+  }
+});
 
-  mp_payment_id: String
+const ordenSchema = new mongoose.Schema(
+  {
+    evento_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Evento",
+      required: true
+    },
 
-}, { timestamps: true });
+    cliente: {
+      nombre: {
+        type: String,
+        required: true,
+        trim: true,
+        minlength: 2
+      },
+      apellido: {
+        type: String,
+        required: true,
+        trim: true,
+        minlength: 2
+      },
+      dni: {
+        type: String,
+        required: true,
+        trim: true,
+        minlength: 6
+      },
+      email: {
+        type: String,
+        required: true,
+        lowercase: true,
+        trim: true,
+        match: [/^\S+@\S+\.\S+$/, "Email inválido"],
+        index: true
+      }
+    },
+
+    items: {
+      type: [itemSchema],
+      validate: {
+        validator: arr => arr.length > 0,
+        message: "Debe haber al menos un item"
+      }
+    },
+
+    total: {
+      type: Number,
+      required: true,
+      min: 1
+    },
+
+    estado: {
+      type: String,
+      enum: ["pendiente", "pagado", "cancelado"],
+      default: "pendiente",
+      index: true
+    },
+
+    mp_payment_id: {
+      type: String,
+      index: true
+    }
+  },
+  { timestamps: true }
+);
 
 export default mongoose.model("Orden", ordenSchema);

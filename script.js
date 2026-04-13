@@ -11,27 +11,63 @@ const cantidadEntradas = document.getElementById("cantidadEntradas");
 const montoTotalElem = document.getElementById("montoTotal");
 const confirmarCompra = document.getElementById("confirmarCompra");
 
-let valorActual = 0;
+let compraActual = {
+  eventoId: null,
+  nombre: "",
+  precio: 0,
+  tipo: ""
+};
 
-function abrirModal(valor) {
-  valorActual = Number(valor) || 100;
+function abrirModal(evento, entrada) {
+  compraActual = {
+    eventoId: evento._id,
+    nombre: evento.nombre,
+    precio: entrada.precio,
+    tipo: entrada.tipo
+  };
+
   cantidadEntradas.value = 1;
-  montoTotalElem.textContent = valorActual.toLocaleString("es-AR");
+  actualizarTotal();
   modal.classList.remove("hidden");
 }
 
-cerrarModal.onclick = () => modal.classList.add("hidden");
-modal.onclick = e => e.target === modal && modal.classList.add("hidden");
+function cerrarModalFn() {
+  modal.classList.add("hidden");
+}
 
-cantidadEntradas.oninput = () => {
-  const cantidad = Number(cantidadEntradas.value) || 1;
-  montoTotalElem.textContent =
-    (cantidad * valorActual).toLocaleString("es-AR");
+cerrarModal.onclick = cerrarModalFn;
+
+modal.onclick = e => {
+  if (e.target === modal) cerrarModalFn();
 };
 
+cantidadEntradas.oninput = actualizarTotal;
+
+function actualizarTotal() {
+  const cantidad = Number(cantidadEntradas.value) || 1;
+  const total = cantidad * compraActual.precio;
+  montoTotalElem.textContent = total.toLocaleString("es-AR");
+}
+
 confirmarCompra.onclick = () => {
-  alert(`Total a pagar: $${montoTotalElem.textContent}\nAlias: pepemoli.mp`);
-  modal.classList.add("hidden");
+  const cantidad = Number(cantidadEntradas.value) || 1;
+
+  console.log("🧾 Compra:", {
+    ...compraActual,
+    cantidad,
+    total: cantidad * compraActual.precio
+  });
+
+  alert(
+    `Evento: ${compraActual.nombre}
+Entrada: ${compraActual.tipo}
+Cantidad: ${cantidad}
+Total: $${montoTotalElem.textContent}
+
+Alias: pepemoli.mp`
+  );
+
+  cerrarModalFn();
 };
 
 function formatearFecha(fechaStr) {
@@ -52,7 +88,8 @@ function formatearFecha(fechaStr) {
 
 async function cargarEventos() {
   const contenedor = document.getElementById("eventos");
-  contenedor.innerHTML = "<p class='text-gray-400 animate-pulse'>Cargando eventos...</p>";
+  contenedor.innerHTML =
+    "<p class='text-gray-400 animate-pulse'>Cargando eventos...</p>";
 
   try {
     const response = await fetch(API_URL);
@@ -65,8 +102,6 @@ async function cargarEventos() {
       const lugar = ev.lugar || "";
       const imagen = ev.imagen || "";
       const estado = ev.estado?.toLowerCase() || "agotado";
-
-      const valor = ev.entradas?.[0]?.precio || 100;
 
       const agotado = estado !== "activo";
 
@@ -109,27 +144,38 @@ async function cargarEventos() {
       pInfo.className = "text-gray-400 text-sm mt-1";
       pInfo.textContent = `${formatearFecha(fecha)} — ${lugar}`;
 
-      const pPrecio = document.createElement("p");
-      pPrecio.className = "text-yellow-400 font-semibold text-lg mt-2";
-      pPrecio.textContent = `💰 $${valor.toLocaleString("es-AR")}`;
+      contenido.append(h3, pInfo);
 
-      const boton = document.createElement("button");
-      boton.className =
-        `mt-4 w-full py-2 rounded-lg font-medium text-white ${
-          agotado
-            ? "bg-gray-700 cursor-not-allowed"
-            : "bg-purple-600 hover:bg-purple-700"
-        }`;
+      // 🎟️ MULTIPLES ENTRADAS
+      if (!agotado && ev.entradas?.length) {
+        ev.entradas.forEach(entrada => {
+          const precio = entrada.precio || 0;
 
-      boton.textContent = agotado ? "Agotado" : "Comprar entrada";
+          const pPrecio = document.createElement("p");
+          pPrecio.className =
+            "text-yellow-400 font-semibold text-md mt-2";
+          pPrecio.textContent =
+            `${entrada.tipo}: $${precio.toLocaleString("es-AR")}`;
 
-      if (!agotado) boton.onclick = () => abrirModal(valor);
+          const boton = document.createElement("button");
+          boton.className =
+            "mt-2 w-full py-2 rounded-lg font-medium text-white bg-purple-600 hover:bg-purple-700";
 
-      contenido.append(h3, pInfo, pPrecio, boton);
+          boton.textContent = `Comprar ${entrada.tipo}`;
+          boton.onclick = () => abrirModal(ev, entrada);
+
+          contenido.append(pPrecio, boton);
+        });
+      } else {
+        const agotadoTxt = document.createElement("p");
+        agotadoTxt.className = "text-red-400 mt-3 font-semibold";
+        agotadoTxt.textContent = "Entradas agotadas";
+        contenido.appendChild(agotadoTxt);
+      }
+
       tarjeta.append(imgWrapper, contenido);
       contenedor.appendChild(tarjeta);
     });
-
   } catch (error) {
     console.error(error);
     contenedor.innerHTML =
