@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NEXO Producciones</title>
 
-  <!-- Base para GitHub Pages -->
-  <base href="/nexo-producciones/">
+  <!-- ⚠️ ACTIVAR SOLO EN GITHUB PAGES -->
+  <!-- <base href="/nexo-producciones/"> -->
 
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -14,6 +14,7 @@
   <!-- Estilos propios -->
   <link rel="stylesheet" href="style.css">
 
+  <!-- Favicon -->
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/891/891399.png" type="image/png">
 </head>
 
@@ -21,8 +22,11 @@
 
   <!-- HEADER -->
   <header class="text-center py-8 bg-gray-950 shadow-md">
-    <img src="imagenes/nexo_logo_transparente.png" alt="NEXO Producciones"
-         class="mx-auto mb-4 w-24 h-auto" />
+    <img 
+      src="imagenes/nexo_logo_transparente.png" 
+      alt="NEXO Producciones"
+      class="mx-auto mb-4 w-24 h-auto"
+    />
 
     <h1 class="text-4xl font-bold tracking-widest text-purple-400">
       NEXO Producciones
@@ -31,42 +35,50 @@
     <p class="text-gray-400 mt-2">Eventos artísticos y culturales</p>
 
     <div class="flex justify-center gap-6 mt-4">
+      
+      <!-- Facebook -->
       <a href="https://www.facebook.com/nexo.producciones.2025"
          target="_blank" rel="noopener noreferrer"
          class="text-gray-400 hover:text-blue-500 transition"
          aria-label="Facebook">
-        <!-- Facebook SVG -->
         <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
           <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8v-6.93H7.9V12H10V9.8c0-2.08 1.23-3.23 3.12-3.23.9 0 1.84.16 1.84.16v2.03h-1.04c-1.03 0-1.35.64-1.35 1.3V12h2.3l-.37 2.87h-1.93v6.93c4.56-.93 8-4.96 8-9.8z"/>
         </svg>
       </a>
 
+      <!-- Instagram -->
       <a href="https://www.instagram.com/nexo_producciones_artisticas/"
          target="_blank" rel="noopener noreferrer"
          class="text-gray-400 hover:text-pink-500 transition"
          aria-label="Instagram">
-        <!-- Instagram SVG -->
         <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.97.24 2.43.4a4.9 4.9 0 0 1 1.77 1.02 4.9 4.9 0 0 1 1.02 1.77c.16.46.35 1.26.4 2.43.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.24 1.97-.4 2.43a4.9 4.9 0 0 1-1.02 1.77 4.9 4.9 0 0 1-1.77 1.02c-.46.16-1.26.35-2.43.4-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.97-.24-2.43-.4a4.9 4.9 0 0 1-1.77-1.02 4.9 4.9 0 0 1-1.02-1.77c-.16-.46-.35-1.26-.4-2.43C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.24-1.97.4-2.43a4.9 4.9 0 0 1 1.02-1.77 4.9 4.9 0 0 1 1.77-1.02c.46-.16 1.26-.35 2.43-.4C8.42 2.17 8.8 2.16 12 2.16z"/>
         </svg>
       </a>
+
     </div>
   </header>
 
   <!-- MAIN -->
   <main class="container mx-auto p-6">
+
     <h2 class="text-2xl font-semibold mb-6 text-purple-300 border-b border-purple-500 pb-2">
       Próximos eventos
     </h2>
 
-    <div id="eventos" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+    <!-- CONTENEDOR EVENTOS -->
+    <div id="eventos" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <p class="text-gray-400 animate-pulse">Cargando eventos...</p>
+    </div>
 
+    <!-- INFO -->
     <div class="mt-10 text-center text-sm text-gray-400 max-w-2xl mx-auto">
       <p>
         Las entradas quedan reservadas una vez acreditado el pago.<br>
         Presentar comprobante al ingresar al evento.
       </p>
     </div>
+
   </main>
 
   <!-- FOOTER -->
@@ -77,24 +89,28 @@
   <!-- MODAL -->
   <div id="modal" class="modal hidden">
     <div class="modal-content">
+
       <button id="cerrarModal" class="modal-close">&times;</button>
+
       <h3 class="modal-title">Comprar entradas</h3>
 
       <label>Cantidad de entradas:</label>
       <input id="cantidadEntradas" type="number" min="1" value="1">
 
-      <p>Total: $<span id="montoTotal">0</span></p>
+      <p class="mt-3">Total: $<span id="montoTotal">0</span></p>
 
-      <p>Alias Mercado Pago:</p>
-      <strong>pepemoli.mp</strong>
+      <p class="mt-3">Alias Mercado Pago:</p>
+      <strong class="block mb-4">pepemoli.mp</strong>
 
       <button id="confirmarCompra" class="modal-btn">
         Confirmar
       </button>
+
     </div>
   </div>
 
-  <!-- JS -->
+  <!-- SCRIPT -->
   <script src="script.js" defer></script>
+
 </body>
 </html>

@@ -1,110 +1,220 @@
 # 🎭 NEXO Producciones
 
-Sitio web oficial de **NEXO Producciones**, dedicado a la difusión y venta de entradas para eventos artísticos y culturales.
+Plataforma web para gestión y venta de entradas de eventos artísticos y culturales.
 
-El proyecto está desarrollado como un **sitio estático**, optimizado para **GitHub Pages**, con diseño moderno usando **Tailwind CSS** y carga dinámica de eventos desde **Google Sheets**.
-
----
-
-## 🌐 Demo
-
-👉 https://moliaaaj.github.io/nexo-producciones/
+🌐 Sitio oficial: https://nexoesquel.com
+🔌 API: https://api.nexoesquel.com
 
 ---
 
-## 🧱 Estructura del proyecto
+## 🚀 Descripción
+
+NEXO Producciones es una aplicación web que permite:
+
+* Visualizar eventos en tiempo real
+* Gestionar entradas y precios dinámicamente
+* Realizar compras online
+* Preparar integración con pagos (MercadoPago)
+* Escalar hacia un sistema completo de ticketing con QR y envío por email
+
+---
+
+## 🧱 Arquitectura
 
 ```txt
-/nexo-producciones
-│── index.html        # Estructura principal del sitio
-│── style.css         # Estilos personalizados (complemento de Tailwind)
-│── script.js         # Lógica JS (fetch de eventos, modal de compra)
-│── README.md
-│── /imagenes
-│   ├── nexo_logo_transparente.png
-│   └── nexo_back.jpg
+Frontend (https://nexoesquel.com)
+        ↓
+Backend API (https://api.nexoesquel.com)
+        ↓
+Base de datos (MongoDB Atlas)
+```
+
+---
+
+## 📁 Estructura del proyecto
+
+```txt
+nexo-producciones/
+│
+├── frontend/
+│   ├── index.html
+│   ├── script.js
+│   ├── style.css
+│   └── imagenes/
+│
+├── backend/
+│   ├── server.js
+│   ├── config/
+│   │   └── db.js
+│   ├── models/
+│   │   ├── Evento.js
+│   │   ├── Orden.js
+│   │   └── Ticket.js
+│   ├── .env
+│   └── package.json
+│
+└── README.md
+```
 
 ---
 
 ## ⚙️ Tecnologías utilizadas
 
+### Frontend
+
 * HTML5
-* Tailwind CSS (CDN)
-* JavaScript Vanilla (ES6+)
-* Google Sheets como backend de eventos
-* OpenSheet API para consumo de datos
-* GitHub Pages para hosting
+* TailwindCSS
+* JavaScript (Vanilla)
+
+### Backend
+
+* Node.js
+* Express
+* MongoDB (Mongoose)
+* CORS
+* dotenv
+
+### Base de datos
+
+* MongoDB Atlas
 
 ---
 
-## 📊 Fuente de datos (Eventos)
+## 🔧 Instalación y ejecución (local)
 
-Los eventos se cargan dinámicamente desde una hoja de cálculo de Google Sheets.
+### 1. Clonar el repositorio
 
-Cada fila debe contener las siguientes columnas:
-
-| Columna | Descripción                         |
-| ------- | ----------------------------------- |
-| id      | Número de clave primaria            |
-| nombre  | Nombre del evento                   |
-| fecha   | Fecha (`DD/MM/YYYY` o `YYYY-MM-DD`) |
-| lugar   | Lugar del evento                    |
-| imagen  | URL de la imagen del evento         |
-| link    | Link a Mercado Pago                 |
-| estado  | `disponible` o `agotado`            |
-| valor   | Precio de la entrada                |
+```bash
+git clone https://github.com/tu-usuario/nexo-producciones.git
+cd nexo-producciones
+```
 
 ---
 
-## 🛒 Compra de entradas
+### 2. Backend
 
-* El botón “Comprar entrada” abre un modal.
-* El usuario selecciona la cantidad de entradas.
-* El total se calcula automáticamente.
-* Se muestra el alias de pago (Mercado Pago).
-* Las entradas quedan reservadas una vez acreditado el pago.
+```bash
+cd backend
+npm install
+```
 
-⚠️ Importante:
-Este sitio no procesa pagos automáticamente.
-El pago se realiza por fuera y la validación es manual.
+Crear archivo `.env`:
 
----
+```env
+PORT=3000
+MONGO_URI=mongodb+srv://USER:PASSWORD@cluster.mongodb.net/nexo_db?retryWrites=true&w=majority
+```
 
-## 🚀 Deploy en GitHub Pages
+Ejecutar:
 
-1. Subir el proyecto al repositorio nexo-producciones
-2. Ir a Settings → Pages
-3. Seleccionar:
-  * Branch: main
-  * Folder: /root
-4. Guardar los cambios
-5. Verificar que en index.html exista: <base href="/nexo-producciones/">
+```bash
+npm run dev
+```
 
----
+Servidor disponible en:
 
-## 🧠 Buenas prácticas aplicadas
-
-* Código modular (HTML / CSS / JS separados)
-* Fetch asíncrono con manejo de errores
-* Carga diferida de imágenes
-* Diseño responsive
-* Sin frameworks pesados
-* Compatible con hosting estático
+```
+http://localhost:3000
+```
 
 ---
 
-## 🔮 Posibles mejoras futuras
+### 3. Frontend
 
-* Confirmación automática por WhatsApp
-* Control de stock de entradas
-* Panel de administración
-* SEO avanzado (Open Graph / meta tags)
-* Integración con pasarela de pagos
-* Filtros por fecha, lugar o estado
+Ejecutar servidor local:
+
+```bash
+npx serve frontend
+```
+
+O usar Live Server en VS Code.
+
+---
+
+## 🌐 API
+
+### Obtener eventos
+
+```
+GET /eventos
+```
+
+Ejemplo:
+
+```json
+[
+  {
+    "_id": "...",
+    "nombre": "Festival NEXO",
+    "descripcion": "Una noche de música en vivo",
+    "fecha": "2026-05-11",
+    "lugar": "Esquel",
+    "entradas": [
+      {
+        "tipo": "General",
+        "precio": 5000
+      }
+    ]
+  }
+]
+```
+
+---
+
+## 🧪 Estado actual del proyecto
+
+✔ Frontend dinámico conectado al backend
+✔ Backend funcional desplegable
+✔ Conexión a MongoDB Atlas
+✔ API REST operativa
+
+---
+
+## 🔜 Próximas funcionalidades
+
+* [ ] Página de detalle de evento
+* [ ] Flujo completo de compra (checkout)
+* [ ] Integración con MercadoPago
+* [ ] Generación de QR por entrada
+* [ ] Envío de comprobantes por email
+* [ ] Panel de administración
+
+---
+
+## 🌍 Deploy
+
+### Frontend
+
+* GitHub Pages conectado a:
+  https://nexoesquel.com
+
+### Backend
+
+* Render / Railway
+* Subdominio:
+  https://api.nexoesquel.com
+
+### Base de datos
+
+* MongoDB Atlas
+
+---
+
+## 🔐 Seguridad
+
+* Uso de variables de entorno (`.env`)
+* No exponer credenciales en el repositorio
+* Configuración de acceso en MongoDB Atlas
+* Uso de HTTPS en producción
+
+---
+
+## 👨‍💻 Autor
+
+Proyecto desarrollado para NEXO Producciones.
 
 ---
 
 ## 📄 Licencia
 
-© 2026 NEXO Producciones
-Todos los derechos reservados.
+Uso interno / privado.
