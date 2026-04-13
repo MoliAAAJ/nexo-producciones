@@ -1,24 +1,17 @@
 import mongoose from "mongoose";
 
 const itemSchema = new mongoose.Schema({
-  entrada_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true
-  },
   tipo: {
     type: String,
-    required: true,
-    trim: true
+    required: true
   },
   cantidad: {
     type: Number,
-    required: true,
-    min: 1
+    required: true
   },
   precio_unitario: {
     type: Number,
-    required: true,
-    min: 1
+    required: true
   }
 });
 

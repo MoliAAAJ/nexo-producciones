@@ -51,7 +51,6 @@ const eventoSchema = new mongoose.Schema(
       type: String,
       enum: ["activo", "agotado", "finalizado"],
       default: "activo",
-      index: true
     },
     entradas: {
       type: [entradaSchema],
