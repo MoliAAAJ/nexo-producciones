@@ -1,7 +1,9 @@
 "use strict";
 
-const API_URL = "http://localhost:3000/eventos";
-// const API_URL = "https://api.nexoesquel.com/eventos";
+const API_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3000/eventos"
+    : "https://api.nexoesquel.com/eventos";
 
 const modal = document.getElementById("modal");
 const cerrarModal = document.getElementById("cerrarModal");
