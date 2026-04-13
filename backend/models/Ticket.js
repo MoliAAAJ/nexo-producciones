@@ -16,11 +16,6 @@ const ticketSchema = new mongoose.Schema(
       index: true
     },
 
-    entrada_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true
-    },
-
     tipo: {
       type: String,
       required: true,

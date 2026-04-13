@@ -1,14 +1,25 @@
+"use strict";
+
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import helmet from "helmet";
+
 import { connectDB } from "./config/db.js";
 import Evento from "./models/Evento.js";
+import ordenRoutes from "./routes/orden.routes.js";
 
 dotenv.config();
 
 const app = express();
 
-// 🔒 CORS CONFIGURADO
+// 🔥 DB primero
+connectDB();
+
+// 🔒 seguridad
+app.use(helmet());
+
+// 🔒 CORS
 app.use(
   cors({
     origin: [
@@ -23,24 +34,24 @@ app.use(
 // middlewares
 app.use(express.json());
 
-// conectar DB
-connectDB();
+// rutas
+app.use("/api", ordenRoutes);
 
-// health check (clave para deploy)
+// health
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
 
-// test route
+// test
 app.get("/", (req, res) => {
   res.send("API NEXO funcionando 🚀");
 });
 
-// obtener eventos
-app.get("/eventos", async (req, res) => {
+// eventos
+app.get("/api/eventos", async (req, res) => {
   try {
     const eventos = await Evento.find();
-
+    console.log(`📊 Eventos enviados: ${eventos.length}`);
     res.json(eventos);
   } catch (error) {
     console.error("❌ Error en /eventos:", error.message);
