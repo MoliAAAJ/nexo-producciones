@@ -1,10 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <title>Pago exitoso</title>
+  <meta charset="UTF-8" />
+  <title>Compra Exitosa</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #111;
+      color: white;
+      padding: 40px;
+    }
+
+    .card {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    img {
+      width: 180px;
+      background: white;
+      padding: 10px;
+      border-radius: 10px;
+    }
+  </style>
 </head>
 <body>
+
   <h1>✅ Pago aprobado</h1>
-  <p>Tu compra fue realizada con éxito</p>
+
+  <div id="contenido"></div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const ordenId = params.get("orden_id");
+
+    async function cargarOrden() {
+
+      const res = await fetch(
+        `http://localhost:3000/api/orden/${ordenId}`
+      );
+
+      const data = await res.json();
+
+      const div = document.getElementById("contenido");
+
+      div.innerHTML = `
+        <div class="card">
+          <h2>Orden #${data.orden._id}</h2>
+          <p>Total: $${data.orden.total}</p>
+          <p>Estado: ${data.orden.estado}</p>
+        </div>
+      `;
+
+      data.tickets.forEach(ticket => {
+
+        div.innerHTML += `
+          <div class="card">
+            <h3>${ticket.tipo}</h3>
+
+            <p>QR:</p>
+
+            <img src="${ticket.qr_code}" />
+          </div>
+        `;
+      });
+    }
+
+    cargarOrden();
+  </script>
+
 </body>
 </html>

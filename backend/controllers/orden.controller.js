@@ -73,7 +73,7 @@ export const crearOrden = async (req, res) => {
         ],
 
       back_urls: {
-        success: `${process.env.FRONT_URL}/success.html`,
+        success: `${process.env.FRONT_URL}/success.html?orden_id=${orden._id}`,
         failure: `${process.env.FRONT_URL}/fail.html`,
         pending: `${process.env.FRONT_URL}/pending.html`
       },
@@ -153,5 +153,34 @@ export const mpWebhook = async (req, res) => {
   } catch (error) {
     console.error("❌ Error webhook:", error);
     return res.sendStatus(200);
+  }
+};
+
+export const obtenerOrden = async (req, res) => {
+  try {
+    const orden = await Orden.findById(req.params.id);
+
+    if (!orden) {
+      return res.status(404).json({
+        error: "Orden no encontrada"
+      });
+    }
+
+    const tickets = await Ticket.find({
+      orden_id: orden._id
+    });
+
+    res.json({
+      ok: true,
+      orden,
+      tickets
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Error obteniendo orden"
+    });
   }
 };
