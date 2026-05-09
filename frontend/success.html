@@ -207,9 +207,20 @@
 
   <script>
 
-    const params = new URLSearchParams(window.location.search);
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
 
-    const ordenId = params.get("orden_id");
+    const ordenId =
+      localStorage.getItem("orden_id") ||
+      params.get("orden_id");
+
+    if (!ordenId) {
+
+      alert("Orden no encontrada");
+
+    }
 
     async function cargarOrden(){
 
@@ -291,6 +302,23 @@
                 <div class="qr-text">
                   ${ticket.qr_code}
                 </div>
+
+                <a
+                  href="http://localhost:3000/api/ticket/${ticket._id}/pdf"
+                  target="_blank"
+                  style="
+                    display:inline-block;
+                    margin-top:20px;
+                    background:#00d26a;
+                    color:black;
+                    padding:12px 20px;
+                    border-radius:12px;
+                    text-decoration:none;
+                    font-weight:bold;
+                  "
+                >
+                  ⬇ Descargar PDF
+                </a>
 
               </div>
 
