@@ -86,10 +86,16 @@ export const generarPDF = (ticket, orden) => {
 
     const qrBuffer = Buffer.from(base64Data, "base64");
 
-    doc.image(qrBuffer, {
-      fit: [220, 220],
-      align: "center"
-    });
+    doc.image(
+      Buffer.from(
+        ticket.qr_code.split(",")[1],
+        "base64"
+      ),
+      {
+        fit: [200, 200],
+        align: "center"
+      }
+    );
 
     doc.moveDown(2);
 

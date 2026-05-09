@@ -9,6 +9,7 @@ import Evento from "./models/Evento.js";
 
 import ordenRoutes from "./routes/orden.routes.js";
 import mpRoutes from "./routes/mp.routes.js";
+import frontRoutes from "./routes/front.routes.js";
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use(express.json());
 // 🔥 ROUTES
 app.use("/api", ordenRoutes);
 app.use("/mp", mpRoutes);
+app.use("/", frontRoutes);
 
 // 🔥 DB
 connectDB();

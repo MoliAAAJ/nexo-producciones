@@ -1,5 +1,7 @@
 import express from "express";
 
+import { mpWebhook } from "../controllers/orden.controller.js";
+
 import { MercadoPagoConfig, Payment } from "mercadopago";
 
 import Orden from "../models/Orden.js";
@@ -87,7 +89,7 @@ router.post("/webhook", async (req, res) => {
           orden_id: orden._id,
           evento_id: evento._id,
           tipo: item.tipo,
-          qr_code: generarQR(),
+          qr_code: await generarQR(),
           usado: false
         });
 

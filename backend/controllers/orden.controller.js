@@ -111,12 +111,8 @@ export const crearOrden = async (req, res) => {
           }
         ],
 
-        // 🔥 Webhook MP
-
         notification_url:
           `${process.env.BASE_URL}/mp/webhook`,
-
-        // 🔥 URLs frontend
 
         back_urls: {
 
@@ -131,7 +127,7 @@ export const crearOrden = async (req, res) => {
 
         },
 
-        // 🔥 Referencia interna
+        auto_return: "approved",
 
         external_reference: String(orden._id)
 
@@ -265,7 +261,7 @@ export const mpWebhook = async (req, res) => {
 
           tipo: item.tipo,
 
-          qr_code: generarQR(),
+          qr_code: qrCode,
 
           usado: false
 

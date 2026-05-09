@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
 
   <title>NEXO • Tickets</title>
 
@@ -15,7 +20,7 @@
     }
 
     body{
-      font-family: Arial, Helvetica, sans-serif;
+      font-family:Arial, Helvetica, sans-serif;
       background:#0f0f10;
       color:white;
       min-height:100vh;
@@ -56,7 +61,8 @@
 
     .orden-grid{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      grid-template-columns:
+        repeat(auto-fit,minmax(220px,1fr));
       gap:20px;
       margin-top:20px;
     }
@@ -85,24 +91,24 @@
 
     .tickets-grid{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+      grid-template-columns:
+        repeat(auto-fit,minmax(320px,1fr));
       gap:25px;
     }
 
     .ticket{
-      background:linear-gradient(
-        135deg,
-        #18181b,
-        #111114
-      );
+      background:
+        linear-gradient(
+          135deg,
+          #18181b,
+          #111114
+        );
 
       border:1px solid #2a2a2f;
 
       border-radius:24px;
 
       overflow:hidden;
-
-      position:relative;
 
       transition:0.25s;
     }
@@ -149,6 +155,7 @@
       color:#9a9aa3;
       font-size:14px;
       word-break:break-all;
+      margin-bottom:10px;
     }
 
     .footer{
@@ -178,17 +185,23 @@
     }
 
   </style>
+
 </head>
+
 <body>
 
   <div class="container">
 
     <div class="hero">
-      <h1 class="success">✅ Pago aprobado</h1>
+
+      <h1 class="success">
+        ✅ Pago aprobado
+      </h1>
 
       <p>
         Tus entradas fueron generadas correctamente
       </p>
+
     </div>
 
     <div id="contenido">
@@ -216,9 +229,46 @@
       localStorage.getItem("orden_id") ||
       params.get("orden_id");
 
-    if (!ordenId) {
+    // 🔥 Validación
 
-      alert("Orden no encontrada");
+    if (!ordenId || ordenId === "null") {
+
+      document.body.innerHTML = `
+
+        <div style="
+          min-height:100vh;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          background:#111827;
+          color:white;
+          font-family:sans-serif;
+          flex-direction:column;
+          gap:20px;
+        ">
+
+          <h1>⚠ Orden no encontrada</h1>
+
+          <a
+            href="index.html"
+            style="
+              background:#9333ea;
+              color:white;
+              padding:12px 20px;
+              border-radius:12px;
+              text-decoration:none;
+            "
+          >
+            Volver al inicio
+          </a>
+
+        </div>
+
+      `;
+
+      throw new Error(
+        "orden_id inválido"
+      );
 
     }
 
@@ -226,35 +276,72 @@
 
       try{
 
-        const response = await fetch(
-          `http://localhost:3000/api/orden/${ordenId}`
-        );
+        let data = null;
 
-        const data = await response.json();
+        // 🔥 Esperar webhook
 
-        const contenido = document.getElementById("contenido");
+        for (let i = 0; i < 10; i++) {
+
+          const response = await fetch(
+            `http://localhost:3000/api/orden/${ordenId}`
+          );
+
+          data = await response.json();
+
+          console.log("INTENTO:", i);
+          console.log(data);
+
+          // 🎟️ si ya hay tickets → salir
+
+          if (
+            data?.tickets &&
+            data.tickets.length > 0
+          ) {
+            break;
+          }
+
+          // ⏳ esperar
+
+          await new Promise(resolve =>
+            setTimeout(resolve, 2000)
+          );
+
+        }
+
+        const contenido =
+          document.getElementById(
+            "contenido"
+          );
 
         contenido.innerHTML = `
 
           <div class="orden-card">
 
-            <h2>🧾 Resumen de compra</h2>
+            <h2>
+              🧾 Resumen de compra
+            </h2>
 
             <div class="orden-grid">
 
               <div class="info-box">
                 <span>Orden</span>
-                <strong>${data.orden._id}</strong>
+                <strong>
+                  ${data.orden._id}
+                </strong>
               </div>
 
               <div class="info-box">
                 <span>Total pagado</span>
-                <strong>$${data.orden.total}</strong>
+                <strong>
+                  $${data.orden.total}
+                </strong>
               </div>
 
               <div class="info-box">
                 <span>Estado</span>
-                <strong>${data.orden.estado}</strong>
+                <strong>
+                  ${data.orden.estado}
+                </strong>
               </div>
 
               <div class="info-box">
@@ -273,11 +360,19 @@
             🎟️ Tus Tickets
           </h2>
 
-          <div class="tickets-grid" id="tickets-grid"></div>
+          <div
+            class="tickets-grid"
+            id="tickets-grid"
+          ></div>
 
         `;
 
-        const ticketsGrid = document.getElementById("tickets-grid");
+        const ticketsGrid =
+          document.getElementById(
+            "tickets-grid"
+          );
+
+        // 🎟️ render tickets
 
         data.tickets.forEach(ticket => {
 
@@ -297,10 +392,13 @@
 
               <div class="ticket-body">
 
-                <img src="${ticket.qr_code}" />
+                <img
+                  src="${ticket.qr_code}"
+                  alt="QR Ticket"
+                />
 
                 <div class="qr-text">
-                  ${ticket.qr_code}
+                  Ticket válido para el ingreso al evento.
                 </div>
 
                 <a
@@ -328,14 +426,22 @@
 
         });
 
-      }catch(error){
+      } catch(error){
 
         console.error(error);
 
-        document.getElementById("contenido").innerHTML = `
+        document.getElementById(
+          "contenido"
+        ).innerHTML = `
+
           <div class="orden-card">
-            <h2>❌ Error cargando tickets</h2>
+
+            <h2>
+              ❌ Error cargando tickets
+            </h2>
+
           </div>
+
         `;
 
       }
