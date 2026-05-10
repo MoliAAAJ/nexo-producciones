@@ -1,17 +1,17 @@
 "use strict";
 
+/**
+ * 🌐 CONFIG API
+ */
 const API_URL =
   window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1"
-    ? "http://localhost:3000/eventos"
-    : "https://api.nexoesquel.com/eventos";
+    ? "http://localhost:3000"
+    : "https://api.nexoesquel.com";
 
-const modal = document.getElementById("modal");
-const cerrarModal = document.getElementById("cerrarModal");
-const cantidadEntradas = document.getElementById("cantidadEntradas");
-const montoTotalElem = document.getElementById("montoTotal");
-const confirmarCompra = document.getElementById("confirmarCompra");
-
+/**
+ * 🧠 STATE GLOBAL SIMPLE
+ */
 let compraActual = {
   eventoId: null,
   nombre: "",
@@ -19,6 +19,27 @@ let compraActual = {
   tipo: ""
 };
 
+/**
+ * 🎛️ ELEMENTOS DOM
+ */
+const modal = document.getElementById("modal");
+const cerrarModal = document.getElementById("cerrarModal");
+const cantidadEntradas = document.getElementById("cantidadEntradas");
+const montoTotalElem = document.getElementById("montoTotal");
+const confirmarCompra = document.getElementById("confirmarCompra");
+
+/**
+ * 📦 STORAGE HELPERS
+ */
+const save = (key, value) =>
+  localStorage.setItem(key, JSON.stringify(value));
+
+const get = (key) =>
+  JSON.parse(localStorage.getItem(key));
+
+/**
+ * 🎟️ ABRIR MODAL
+ */
 function abrirModal(evento, entrada) {
 
   compraActual = {
@@ -36,26 +57,24 @@ function abrirModal(evento, entrada) {
 
 }
 
+/**
+ * ❌ CERRAR MODAL
+ */
 function cerrarModalFn() {
-
   modal.classList.add("hidden");
-
 }
 
 cerrarModal.onclick = cerrarModalFn;
 
-modal.onclick = e => {
-
-  if (e.target === modal) {
-
-    cerrarModalFn();
-
-  }
-
+modal.onclick = (e) => {
+  if (e.target === modal) cerrarModalFn();
 };
 
 cantidadEntradas.oninput = actualizarTotal;
 
+/**
+ * 💰 CALCULAR TOTAL
+ */
 function actualizarTotal() {
 
   const cantidad =
@@ -70,7 +89,7 @@ function actualizarTotal() {
 }
 
 /**
- * 💳 COMPRA REAL
+ * 💳 CREAR ORDEN
  */
 confirmarCompra.onclick = async () => {
 
@@ -80,24 +99,34 @@ confirmarCompra.onclick = async () => {
       Number(cantidadEntradas.value) || 1;
 
     confirmarCompra.disabled = true;
+    confirmarCompra.textContent = "Procesando...";
 
-    confirmarCompra.textContent =
-      "Procesando...";
+    /**
+     * 👤 TRAER CLIENTE REAL
+     * (viene de checkout futuro o localStorage)
+     */
+    const buyer = get("buyer");
+
+    if (!buyer) {
+
+      alert("Faltan datos del comprador");
+
+      window.location.href = "checkout.html";
+
+      return;
+
+    }
 
     const response = await fetch(
-      "http://localhost:3000/api/orden",
+      `${API_URL}/api/orden`,
       {
-
         method: "POST",
-
         headers: {
           "Content-Type": "application/json"
         },
-
         body: JSON.stringify({
 
-          evento_id:
-            compraActual.eventoId,
+          evento_id: compraActual.eventoId,
 
           items: [
             {
@@ -106,110 +135,78 @@ confirmarCompra.onclick = async () => {
             }
           ],
 
-          // ⚠️ TEMPORAL PARA TEST
-          cliente: {
-            nombre: "Juan",
-            apellido: "Perez",
-            dni: "12345678",
-            email: "juan@test.com"
-          }
+          cliente: buyer
 
         })
-
       }
     );
 
-    const data =
-      await response.json();
+    const data = await response.json();
 
     console.log("🧾 ORDEN:", data);
 
     if (!data.ok) {
 
-      alert(
-        data.error ||
-        "Error creando orden"
-      );
+      alert(data.error || "Error creando orden");
 
       confirmarCompra.disabled = false;
-
-      confirmarCompra.textContent =
-        "Confirmar";
+      confirmarCompra.textContent = "Confirmar";
 
       return;
 
     }
 
     /**
-     * 🔥 GUARDAR ORDEN
+     * 💾 GUARDAR ORDEN
      */
-    localStorage.setItem(
-      "orden_id",
-      data.orden_id
-    );
+    save("orden_id", data.orden_id);
 
-    console.log("DATA:", data);
-
-    localStorage.setItem(
-      "orden_id",
-      data.orden_id
-    );
-
-    console.log(
-      "GUARDADO:",
-      localStorage.getItem("orden_id")
-    );
+    save("compra", {
+      evento: compraActual,
+      cantidad
+    });
 
     /**
-     * 🔥 REDIRECT MP
+     * 🔥 REDIRECCIÓN A MP
      */
-    window.location.href =
-      data.init_point;
+    window.location.href = data.init_point;
 
   } catch (error) {
 
     console.error(error);
 
-    alert(
-      "Error procesando compra"
-    );
+    alert("Error procesando compra");
 
     confirmarCompra.disabled = false;
-
-    confirmarCompra.textContent =
-      "Confirmar";
+    confirmarCompra.textContent = "Confirmar";
 
   }
 
 };
 
+/**
+ * 📅 FORMATEAR FECHA
+ */
 function formatearFecha(fechaStr) {
 
   if (!fechaStr) return "";
 
   if (fechaStr.includes("/")) {
 
-    const [d, m, y] =
-      fechaStr.split("/");
-
-    fechaStr =
-      `${y}-${m}-${d}`;
+    const [d, m, y] = fechaStr.split("/");
+    fechaStr = `${y}-${m}-${d}`;
 
   }
 
-  const fecha =
-    new Date(fechaStr);
+  const fecha = new Date(fechaStr);
 
   return isNaN(fecha)
     ? fechaStr
-    : fecha.toLocaleDateString(
-        "es-AR",
-        {
-          day: "2-digit",
-          month: "long",
-          year: "numeric"
-        }
-      );
+    : fecha.toLocaleDateString("es-AR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+      });
 
 }
 
@@ -227,7 +224,7 @@ async function cargarEventos() {
   try {
 
     const response =
-      await fetch(API_URL);
+      await fetch(`${API_URL}/eventos`);
 
     const eventos =
       await response.json();
@@ -236,30 +233,32 @@ async function cargarEventos() {
 
     eventos.forEach(ev => {
 
-      const nombre =
-        ev.nombre || "Evento sin nombre";
+      const nombre = ev.nombre || "Evento sin nombre";
+      const fecha = ev.fecha || "";
+      const lugar = ev.lugar || "";
+      const imagen = ev.imagen || "";
+      const estado = ev.estado?.toLowerCase() || "agotado";
 
-      const fecha =
-        ev.fecha || "";
-
-      const lugar =
-        ev.lugar || "";
-
-      const imagen =
-        ev.imagen || "";
-
-      const estado =
-        ev.estado?.toLowerCase() ||
-        "agotado";
-
-      const agotado =
-        estado !== "activo";
+      const agotado = estado !== "activo";
 
       const tarjeta =
         document.createElement("div");
 
       tarjeta.className =
         "bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-transform";
+      
+      // 👉 CLICK A EVENTO (IR A PÁGINA DETALLE)
+      tarjeta.onclick = () => {
+
+        localStorage.setItem(
+          "evento",
+          JSON.stringify(ev)
+        );
+
+        window.location.href =
+        "evento.html";
+
+      };
 
       /**
        * 📸 IMAGEN
@@ -267,36 +266,22 @@ async function cargarEventos() {
       const imgWrapper =
         document.createElement("div");
 
-      imgWrapper.className =
-        "relative";
+      imgWrapper.className = "relative";
 
       const img =
         document.createElement("img");
 
-      img.src =
-        imagen || "imagenes/nexo_back.jpg";
-
+      img.src = imagen || "imagenes/nexo_back.jpg";
       img.alt = nombre;
-
-      img.className =
-        "w-full h-48 object-cover bg-gray-700";
-
+      img.className = "w-full h-48 object-cover bg-gray-700";
       img.loading = "lazy";
 
       img.onerror = () => {
-
-        img.onerror = null;
-
-        img.src =
-          "imagenes/nexo_back.jpg";
-
+        img.src = "imagenes/nexo_back.jpg";
       };
 
       imgWrapper.appendChild(img);
 
-      /**
-       * 🔴 AGOTADO
-       */
       if (agotado) {
 
         const badge =
@@ -305,8 +290,7 @@ async function cargarEventos() {
         badge.className =
           "absolute top-2 left-2 bg-red-600 text-white font-bold px-3 py-1 rounded-lg text-sm";
 
-        badge.textContent =
-          "AGOTADO";
+        badge.textContent = "AGOTADO";
 
         imgWrapper.appendChild(badge);
 
@@ -323,19 +307,14 @@ async function cargarEventos() {
       const h3 =
         document.createElement("h3");
 
-      h3.className =
-        "text-xl font-semibold text-purple-300";
-
+      h3.className = "text-xl font-semibold text-purple-300";
       h3.textContent = nombre;
 
       const pInfo =
         document.createElement("p");
 
-      pInfo.className =
-        "text-gray-400 text-sm mt-1";
-
-      pInfo.textContent =
-        `${formatearFecha(fecha)} — ${lugar}`;
+      pInfo.className = "text-gray-400 text-sm mt-1";
+      pInfo.textContent = `${formatearFecha(fecha)} — ${lugar}`;
 
       contenido.append(h3, pInfo);
 
@@ -346,8 +325,7 @@ async function cargarEventos() {
 
         ev.entradas.forEach(entrada => {
 
-          const precio =
-            entrada.precio || 0;
+          const precio = entrada.precio || 0;
 
           const pPrecio =
             document.createElement("p");
@@ -370,10 +348,7 @@ async function cargarEventos() {
           boton.onclick = () =>
             abrirModal(ev, entrada);
 
-          contenido.append(
-            pPrecio,
-            boton
-          );
+          contenido.append(pPrecio, boton);
 
         });
 
@@ -388,20 +363,13 @@ async function cargarEventos() {
         agotadoTxt.textContent =
           "Entradas agotadas";
 
-        contenido.appendChild(
-          agotadoTxt
-        );
+        contenido.appendChild(agotadoTxt);
 
       }
 
-      tarjeta.append(
-        imgWrapper,
-        contenido
-      );
+      tarjeta.append(imgWrapper, contenido);
 
-      contenedor.appendChild(
-        tarjeta
-      );
+      contenedor.appendChild(tarjeta);
 
     });
 

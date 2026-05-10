@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Pro NEXO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 text-white p-6">
+
+  <h1 class="text-3xl font-bold text-purple-400 mb-6">
+    Admin Pro NEXO
+  </h1>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
+
+  <button onclick="cargarTodo()"
+    class="bg-purple-600 px-4 py-2 rounded mb-6">
+    Refrescar
+  </button>
+
+  <!-- EVENTOS -->
+  <h2 class="text-xl mb-2">Eventos</h2>
+  <div id="eventos" class="mb-8"></div>
+
+  <!-- TICKETS -->
+  <h2 class="text-xl mb-2">Tickets</h2>
+  <div id="tickets"></div>
+
+<script>
+
+  const API =
+    window.location.hostname === "localhost"
+      ? "http://localhost:3000"
+      : "https://earthlike-drinking-unmarked.ngrok-free.dev";
+
+  async function cargarTodo() {
+
+    const dash =
+      await fetch(`${API}/api/admin/dashboard`)
+        .then(r => r.json());
+
+    const eventos =
+      await fetch(`${API}/api/admin/eventos`)
+        .then(r => r.json());
+
+    const tickets =
+      await fetch(`${API}/api/admin/tickets?usados=false`)
+        .then(r => r.json());
+
+    renderDashboard(dash.data);
+    renderEventos(eventos.data);
+    renderTickets(tickets.tickets);
+
+  }
+
+  function renderDashboard(d) {
+
+    document.getElementById("dashboard").innerHTML = `
+      <div class="bg-gray-800 p-4 rounded">
+        <p>Órdenes</p>
+        <b>${d.totalOrdenes}</b>
+      </div>
+
+      <div class="bg-gray-800 p-4 rounded">
+        <p>Tickets</p>
+        <b>${d.ticketsTotal}</b>
+      </div>
+
+      <div class="bg-gray-800 p-4 rounded">
+        <p>Usados</p>
+        <b>${d.ticketsUsados}</b>
+      </div>
+
+      <div class="bg-gray-800 p-4 rounded">
+        <p>Ingresos</p>
+        <b>$${d.ingresos}</b>
+      </div>
+    `;
+
+  }
+
+  function renderEventos(data) {
+
+    const div = document.getElementById("eventos");
+
+    div.innerHTML = "";
+
+    data.forEach(e => {
+
+      div.innerHTML += `
+        <div class="bg-gray-800 p-3 rounded mb-2">
+          <p><b>${e.evento.nombre}</b></p>
+          <p>Ventas: ${e.ventas}</p>
+          <p>Tickets: ${e.tickets}</p>
+          <p>Usados: ${e.usados}</p>
+        </div>
+      `;
+
+    });
+
+  }
+
+  function renderTickets(data) {
+
+    const div = document.getElementById("tickets");
+
+    div.innerHTML = "";
+
+    data.forEach(t => {
+
+      div.innerHTML += `
+        <div class="bg-gray-800 p-2 rounded mb-2">
+          <p>${t.tipo}</p>
+          <p>${t.usado ? "USADO" : "ACTIVO"}</p>
+        </div>
+      `;
+
+    });
+
+  }
+
+  cargarTodo();
+
+</script>
+
+</body>
+</html>

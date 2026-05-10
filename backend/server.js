@@ -11,6 +11,8 @@ import ordenRoutes from "./routes/orden.routes.js";
 import mpRoutes from "./routes/mp.routes.js";
 import frontRoutes from "./routes/front.routes.js";
 import ticketRoutes from "./routes/ticket.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
+import reportesRoutes from "./routes/reportes.routes.js";
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -34,10 +36,12 @@ app.use(cors());
 app.use(express.json());
 
 // 🔥 ROUTES
-app.use("/api", ordenRoutes);
+app.use("/api/orden", ordenRoutes);
 app.use("/mp", mpRoutes);
 app.use("/", frontRoutes);
 app.use("/api/ticket", ticketRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/reportes", reportesRoutes);
 
 // 🔥 DB
 connectDB();

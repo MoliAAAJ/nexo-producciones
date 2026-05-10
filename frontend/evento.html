@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Evento - NEXO</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 text-white">
+
+  <div class="max-w-4xl mx-auto p-6">
+
+    <!-- BACK -->
+    <button onclick="history.back()"
+      class="text-purple-400 mb-4">
+      ← Volver
+    </button>
+
+    <!-- EVENTO INFO -->
+    <div id="evento" class="bg-gray-800 p-6 rounded-2xl">
+
+      <h1 id="nombre" class="text-3xl font-bold text-purple-400"></h1>
+
+      <p id="fecha" class="text-gray-400 mt-2"></p>
+      <p id="lugar" class="text-gray-400"></p>
+
+      <img id="imagen"
+        class="w-full h-64 object-cover rounded-xl mt-4"/>
+
+      <p id="descripcion"
+        class="mt-4 text-gray-300"></p>
+
+      <!-- ENTRADAS -->
+      <div id="entradas" class="mt-6"></div>
+
+      <!-- BOTÓN PDF -->
+      <button
+        onclick="descargarListado()"
+        class="mt-6 w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg font-semibold">
+        📄 Descargar listado de compradores (PDF)
+      </button>
+
+    </div>
+
+  </div>
+
+<script>
+
+  const evento =
+    JSON.parse(localStorage.getItem("evento"));
+
+  if (!evento) {
+
+    document.body.innerHTML =
+      "<p class='p-10 text-red-400'>Evento no encontrado</p>";
+
+  }
+
+  document.getElementById("nombre").innerText =
+    evento.nombre;
+
+  document.getElementById("fecha").innerText =
+    evento.fecha;
+
+  document.getElementById("lugar").innerText =
+    evento.lugar;
+
+  document.getElementById("descripcion").innerText =
+    evento.descripcion || "Sin descripción";
+
+  document.getElementById("imagen").src =
+    evento.imagen;
+
+  const cont =
+    document.getElementById("entradas");
+
+  evento.entradas.forEach(e => {
+
+    const div =
+      document.createElement("div");
+
+    div.className =
+      "bg-gray-700 p-4 rounded-lg mt-3";
+
+    div.innerHTML = `
+      <p class="font-semibold">${e.tipo}</p>
+      <p class="text-green-400">$${e.precio}</p>
+
+      <div class="flex items-center gap-3 mt-2">
+
+        <input type="number"
+          min="1"
+          value="1"
+          id="qty-${e.tipo}"
+          class="w-20 p-1 rounded bg-gray-800"/>
+
+        <button class="bg-purple-600 px-4 py-2 rounded"
+          onclick="comprar('${e.tipo}', ${e.precio})">
+          Comprar
+        </button>
+
+      </div>
+    `;
+
+    cont.appendChild(div);
+
+  });
+
+  function comprar(tipo, precio){
+
+    const cantidad =
+      Number(document.getElementById(`qty-${tipo}`).value) || 1;
+
+    localStorage.setItem(
+      "orden_temp",
+      JSON.stringify({
+        eventoId: evento._id,
+        eventoNombre: evento.nombre,
+        tipo,
+        precio,
+        cantidad,
+        total: precio * cantidad
+      })
+    );
+
+    window.location.href =
+      "/checkout.html";
+
+  }
+
+  // 📄 DESCARGA PDF
+  async function descargarListado() {
+
+    try {
+
+      const response = await fetch(
+        `http://localhost:3000/api/eventos/${evento._id}/pdf`
+      );
+
+      if (!response.ok) {
+        alert("Error generando PDF");
+        return;
+      }
+
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+
+      a.href = url;
+
+      const nombreEvento =
+        evento.nombre.replace(/\s+/g, "_");
+
+      a.download =
+        `NEXO_${nombreEvento}.pdf`;
+
+      document.body.appendChild(a);
+
+      a.click();
+
+      a.remove();
+
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert("Error descargando PDF");
+
+    }
+
+  }
+
+</script>
+
+</body>
+</html>
