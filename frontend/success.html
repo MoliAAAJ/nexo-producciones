@@ -257,7 +257,7 @@
       for (let i = 0; i < maxIntentos; i++) {
 
         const res = await fetch(
-          `${API}/api/orden/${ordenId}`
+          `http://localhost:3000/api/orden/${ordenId}`
         );
 
         data = await res.json();
@@ -337,7 +337,7 @@
                 Presentar este QR en el ingreso
               </div>
 
-              <a href="${API}/api/ticket/${ticket._id}/pdf"
+              <a href="/api/orden/ticket/${ticket._id}/pdf"
                 target="_blank"
                 style="
                   display:inline-block;

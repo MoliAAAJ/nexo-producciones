@@ -6,108 +6,177 @@ import { generarQR } from "../utils/generarQR.js";
 import { generarPDF } from "../utils/generarPDF.js";
 import { preferenceClient } from "../config/mp.js";
 
+import { enviarTicketsEmail }
+from "../utils/enviarTicketsEmail.js";
+
 /**
- * 🧾 CREAR ORDEN + LINK DE PAGO
+ * 🧾 CREAR ORDEN
  */
 export const crearOrden = async (req, res) => {
 
   try {
 
-    const { evento_id, items, cliente } = req.body;
+    const {
+      evento_id,
+      items,
+      cliente
+    } = req.body;
 
-    if (!evento_id || !items || items.length === 0) {
+    if (
+      !evento_id ||
+      !items ||
+      items.length === 0
+    ) {
+
       return res.status(400).json({
         error: "Datos incompletos"
       });
+
     }
 
-    const evento = await Evento.findById(evento_id);
+    const evento =
+      await Evento.findById(evento_id);
 
     if (!evento) {
+
       return res.status(404).json({
         error: "Evento no encontrado"
       });
+
     }
 
     let total = 0;
+
     const itemsFinal = [];
 
     for (const item of items) {
 
-      const entrada = evento.entradas.find(
-        e => e.tipo === item.tipo
-      );
+      const entrada =
+        evento.entradas.find(
+          e => e.tipo === item.tipo
+        );
 
       if (!entrada) {
+
         return res.status(400).json({
           error: "Entrada inválida"
         });
+
       }
 
-      if (entrada.stock < item.cantidad) {
+      if (
+        entrada.stock < item.cantidad
+      ) {
+
         return res.status(400).json({
           error: "Stock insuficiente"
         });
+
       }
 
-      total += entrada.precio * item.cantidad;
+      total +=
+        entrada.precio *
+        item.cantidad;
 
       itemsFinal.push({
+
         tipo: entrada.tipo,
+
         cantidad: item.cantidad,
-        precio_unitario: entrada.precio
+
+        precio_unitario:
+          entrada.precio
+
       });
 
       entrada.stock -= item.cantidad;
+
     }
 
     await evento.save();
 
-    const orden = await Orden.create({
-      evento_id,
-      cliente,
-      items: itemsFinal,
-      total,
-      estado: "pendiente"
-    });
+    const orden =
+      await Orden.create({
 
-    const preference = await preferenceClient.create({
-      body: {
-        items: [
-          {
-            title: `Entrada ${evento.nombre}`,
-            quantity: 1,
-            unit_price: total,
-            currency_id: "ARS"
-          }
-        ],
-        notification_url: `${process.env.BASE_URL}/mp/webhook`,
-        back_urls: {
-          success: `${process.env.FRONT_URL}/success.html?orden_id=${orden._id}`,
-          failure: `${process.env.FRONT_URL}/fail.html`,
-          pending: `${process.env.FRONT_URL}/pending.html`
-        },
-        auto_return: "approved",
-        external_reference: String(orden._id)
-      }
-    });
+        evento_id,
+
+        cliente,
+
+        items: itemsFinal,
+
+        total,
+
+        estado: "pendiente"
+
+      });
+
+    const preference =
+      await preferenceClient.create({
+
+        body: {
+
+          items: [
+            {
+              title:
+                `Entrada ${evento.nombre}`,
+
+              quantity: 1,
+
+              unit_price: total,
+
+              currency_id: "ARS"
+            }
+          ],
+
+          notification_url:
+            `${process.env.BASE_URL}/mp/webhook`,
+
+          back_urls: {
+
+            success:
+              `${process.env.FRONT_URL}/success.html?orden_id=${orden._id}`,
+
+            failure:
+              `${process.env.FRONT_URL}/fail.html`,
+
+            pending:
+              `${process.env.FRONT_URL}/pending.html`
+
+          },
+
+          auto_return:
+            "approved",
+
+          external_reference:
+            String(orden._id)
+
+        }
+
+      });
 
     const init_point =
-      preference.init_point || preference.body?.init_point;
+      preference.init_point ||
+      preference.body?.init_point;
 
     return res.json({
+
       ok: true,
+
       orden_id: orden._id,
+
       total,
+
       init_point
+
     });
 
   } catch (error) {
 
-    console.error("❌ Error al crear orden:", error);
+    console.error(error);
 
     return res.status(500).json({
-      error: "Error al procesar compra"
+      error:
+        "Error al procesar compra"
     });
 
   }
@@ -116,84 +185,150 @@ export const crearOrden = async (req, res) => {
 
 
 /**
- * 🎟️ WEBHOOK MERCADOPAGO
+ * 🎟️ WEBHOOK MP
  */
-export const mpWebhook = async (req, res) => {
+export const mpWebhook = async (
+  req,
+  res
+) => {
 
   try {
 
-    console.log("🔥 WEBHOOK RECIBIDO");
+    console.log(
+      "🔥 WEBHOOK RECIBIDO"
+    );
 
     const paymentId =
       req.query["data.id"] ||
       req.body?.data?.id;
 
     if (!paymentId) {
+
       return res.sendStatus(200);
+
     }
 
     const response = await fetch(
+
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
+
       {
         headers: {
           Authorization:
             `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`
         }
       }
+
     );
 
-    const payment = await response.json();
+    const payment =
+      await response.json();
 
-    const ordenId = payment.external_reference;
+    const ordenId =
+      payment.external_reference;
 
     if (!ordenId) {
+
       return res.sendStatus(200);
+
     }
 
-    const orden = await Orden.findById(ordenId);
+    const orden =
+      await Orden.findById(ordenId);
 
     if (!orden) {
+
       return res.sendStatus(200);
+
     }
 
-    if (orden.estado === "pagado") {
-      console.log("⚠️ Orden ya pagada");
+    if (
+      orden.estado === "pagado"
+    ) {
+
+      console.log(
+        "⚠️ Orden ya pagada"
+      );
+
       return res.sendStatus(200);
+
     }
 
     orden.estado = "pagado";
+
     await orden.save();
 
-    // 🎟️ GENERAR TICKETS (CORREGIDO)
     const tickets = [];
 
     for (const item of orden.items) {
 
-      for (let i = 0; i < item.cantidad; i++) {
+      for (
+        let i = 0;
+        i < item.cantidad;
+        i++
+      ) {
 
-        const ticket = new Ticket({
-          orden_id: orden._id,
-          evento_id: orden.evento_id,
-          tipo: item.tipo,
-          usado: false
-        });
+        const ticket =
+          new Ticket({
 
-        // 🔥 QR REAL por ticket (usa ID)
-        ticket.qr_code = await generarQR(ticket._id.toString());
+            orden_id:
+              orden._id,
+
+            evento_id:
+              orden.evento_id,
+
+            tipo:
+              item.tipo,
+
+            usado: false
+
+          });
+
+        ticket.qr_code =
+          await generarQR(
+            ticket._id.toString()
+          );
 
         tickets.push(ticket);
+
       }
+
     }
 
-    await Ticket.insertMany(tickets);
+    const ticketsGuardados =
+      await Ticket.insertMany(
+        tickets
+      );
 
-    console.log("🎟️ Tickets generados correctamente");
+    const evento =
+      await Evento.findById(
+        orden.evento_id
+      );
+
+    await enviarTicketsEmail({
+
+      cliente:
+        orden.cliente,
+
+      evento,
+
+      tickets:
+        ticketsGuardados
+
+    });
+
+    console.log(
+      "🎟️ Tickets generados correctamente"
+    );
 
     return res.sendStatus(200);
 
   } catch (error) {
 
-    console.error("❌ Error webhook:", error);
+    console.error(
+      "❌ Error webhook:",
+      error
+    );
 
     return res.sendStatus(500);
 
@@ -203,28 +338,45 @@ export const mpWebhook = async (req, res) => {
 
 
 /**
- * 🔍 OBTENER ORDEN + TICKETS
+ * 🔍 OBTENER ORDEN
  */
-export const obtenerOrden = async (req, res) => {
+export const obtenerOrden = async (
+  req,
+  res
+) => {
 
   try {
 
-    const orden = await Orden.findById(req.params.id);
+    const orden =
+      await Orden.findById(
+        req.params.id
+      );
 
     if (!orden) {
+
       return res.status(404).json({
-        error: "Orden no encontrada"
+        error:
+          "Orden no encontrada"
       });
+
     }
 
-    const tickets = await Ticket.find({
-      orden_id: orden._id
-    });
+    const tickets =
+      await Ticket.find({
+
+        orden_id:
+          orden._id
+
+      });
 
     return res.json({
+
       ok: true,
+
       orden,
+
       tickets
+
     });
 
   } catch (error) {
@@ -232,7 +384,8 @@ export const obtenerOrden = async (req, res) => {
     console.error(error);
 
     return res.status(500).json({
-      error: "Error obteniendo orden"
+      error:
+        "Error obteniendo orden"
     });
 
   }
@@ -241,28 +394,49 @@ export const obtenerOrden = async (req, res) => {
 
 
 /**
- * 📄 DESCARGAR PDF
+ * 📄 PDF
  */
-export const descargarTicketPDF = async (req, res) => {
+export const descargarTicketPDF =
+async (req, res) => {
 
   try {
 
-    const ticket = await Ticket.findById(req.params.id);
+    const ticket =
+      await Ticket.findById(
+        req.params.id
+      );
 
     if (!ticket) {
+
       return res.status(404).json({
-        error: "Ticket no encontrado"
+        error:
+          "Ticket no encontrado"
       });
+
     }
 
-    const orden = await Orden.findById(ticket.orden_id);
+    const orden =
+      await Orden.findById(
+        ticket.orden_id
+      );
 
-    const pdfBuffer = await generarPDF(ticket, orden);
+    const pdfBuffer =
+      await generarPDF(
+        ticket,
+        orden
+      );
 
-    res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
+      "Content-Type",
+      "application/pdf"
+    );
+
+    res.setHeader(
+
       "Content-Disposition",
+
       `attachment; filename=ticket-${ticket._id}.pdf`
+
     );
 
     return res.send(pdfBuffer);
@@ -272,7 +446,8 @@ export const descargarTicketPDF = async (req, res) => {
     console.error(error);
 
     return res.status(500).json({
-      error: "Error generando PDF"
+      error:
+        "Error generando PDF"
     });
 
   }

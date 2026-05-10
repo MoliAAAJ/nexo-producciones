@@ -9,7 +9,7 @@ const router = express.Router();
 
 // endpoint compra
 router.post("/", crearOrden);
-router.get("/orden/:id", obtenerOrden);
+router.get("/:id", obtenerOrden);
 
 router.get(
   "/ticket/:id/pdf",

@@ -323,34 +323,37 @@ async function cargarEventos() {
        */
       if (!agotado && ev.entradas?.length) {
 
-        ev.entradas.forEach(entrada => {
+        const entrada =
+          ev.entradas[0];
 
-          const precio = entrada.precio || 0;
+        const precio =
+          entrada.precio || 0;
 
-          const pPrecio =
-            document.createElement("p");
+        const pPrecio =
+          document.createElement("p");
 
           pPrecio.className =
             "text-yellow-400 font-semibold text-md mt-2";
 
           pPrecio.textContent =
-            `${entrada.tipo}: $${precio.toLocaleString("es-AR")}`;
+            `Entrada General: $${precio.toLocaleString("es-AR")}`;
 
-          const boton =
-            document.createElement("button");
+        const boton =
+          document.createElement("button");
 
           boton.className =
-            "mt-2 w-full py-2 rounded-lg font-medium text-white bg-purple-600 hover:bg-purple-700";
+            "mt-3 w-full py-2 rounded-lg font-medium text-white bg-purple-600 hover:bg-purple-700";
 
           boton.textContent =
-            `Comprar ${entrada.tipo}`;
+            "Ver evento";
 
           boton.onclick = () =>
-            abrirModal(ev, entrada);
+            abrirEvento(ev);
 
-          contenido.append(pPrecio, boton);
-
-        });
+        contenido.append(
+          pPrecio,
+          boton
+        );
 
       } else {
 
