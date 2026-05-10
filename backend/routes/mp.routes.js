@@ -1,7 +1,5 @@
 import express from "express";
 
-import { mpWebhook } from "../controllers/orden.controller.js";
-
 import { MercadoPagoConfig, Payment } from "mercadopago";
 
 import Orden from "../models/Orden.js";
@@ -31,7 +29,7 @@ router.post("/webhook", async (req, res) => {
 
     }
 
-    // 🔥 CONSULTAR PAGO REAL EN MP
+    // 🔥 CONSULTAR PAGO REAL
 
     const payment = await paymentClient.get({
       id: paymentId
@@ -61,9 +59,21 @@ router.post("/webhook", async (req, res) => {
 
     }
 
+    // evitar duplicados
+
     if (orden.estado === "pagado") {
 
-      console.log("⚠️ Orden ya pagada");
+      console.log("⚠ Orden ya pagada");
+
+      return res.sendStatus(200);
+
+    }
+
+    // validar estado MP
+
+    if (payment.status !== "approved") {
+
+      console.log("⚠ Pago no aprobado");
 
       return res.sendStatus(200);
 
@@ -77,27 +87,37 @@ router.post("/webhook", async (req, res) => {
 
     // 🎟️ GENERAR TICKETS
 
-    const tickets = [];
-
     for (const item of orden.items) {
 
       const evento = orden.evento_id;
 
       for (let i = 0; i < item.cantidad; i++) {
 
-        tickets.push({
+        // crear ticket
+
+        const ticket = new Ticket({
+
           orden_id: orden._id,
+
           evento_id: evento._id,
+
           tipo: item.tipo,
-          qr_code: await generarQR(),
+
           usado: false
+
         });
+
+        // generar QR usando ticket._id
+
+        ticket.qr_code = await generarQR(ticket._id);
+
+        // guardar ticket
+
+        await ticket.save();
 
       }
 
     }
-
-    await Ticket.insertMany(tickets);
 
     console.log("🎟️ Tickets generados correctamente");
 
