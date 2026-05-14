@@ -1,3 +1,4 @@
+import path from "path";
 import PDFDocument from "pdfkit";
 
 export const generarPDF = (ticket, orden) => {
@@ -9,49 +10,69 @@ export const generarPDF = (ticket, orden) => {
       margin: 50
     });
 
+    // 🖼️ LOGO
+    const logoPath = path.resolve(
+      "assets/logo.png"
+    );
+
     const buffers = [];
 
-    doc.on("data", buffers.push.bind(buffers));
+    doc.on(
+      "data",
+      buffers.push.bind(buffers)
+    );
 
     doc.on("end", () => {
 
-      const pdfData = Buffer.concat(buffers);
+      const pdfData =
+        Buffer.concat(buffers);
 
       resolve(pdfData);
 
     });
 
-    // 🎨 HEADER
+    // 🔥 LOGO
+
+    try {
+
+      doc.image(logoPath, {
+        fit: [140, 140],
+        align: "center"
+      });
+
+    } catch (error) {
+
+      console.log(
+        "⚠️ Logo no encontrado"
+      );
+
+    }
+
+    doc.moveDown(1);
+
+    // 🎵 EVENTO
+
+    const nombreEvento =
+      orden.evento_id?.nombre ||
+      "EVENTO";
 
     doc
-      .fontSize(28)
+      .fontSize(22)
       .fillColor("#111")
-      .text("NEXO TICKETS", {
-        align: "center"
-      });
+      .text(
+        nombreEvento,
+        {
+          align: "center"
+        }
+      );
 
-    doc.moveDown();
+    doc.moveDown(1);
 
-    doc
-      .fontSize(18)
-      .fillColor("#00aa55")
-      .text("Entrada válida", {
-        align: "center"
-      });
-
-    doc.moveDown(2);
-
-    // 📋 INFO
+    // 👤 CLIENTE
 
     doc
       .fontSize(14)
       .fillColor("#000");
-
-    doc.text(`Ticket ID: ${ticket._id}`);
-    doc.moveDown();
-
-    doc.text(`Orden ID: ${orden._id}`);
-    doc.moveDown();
 
     doc.text(
       `Cliente: ${orden.cliente.nombre} ${orden.cliente.apellido}`
@@ -59,53 +80,133 @@ export const generarPDF = (ticket, orden) => {
 
     doc.moveDown();
 
-    doc.text(`Tipo entrada: ${ticket.tipo}`);
+    // 🎟️ TIPO
+
+    doc.text(
+      `Tipo entrada: ${ticket.tipo}`
+    );
 
     doc.moveDown();
 
-    doc.text(`Estado: ${orden.estado}`);
+    // 📍 LUGAR
 
-    doc.moveDown(2);
+    doc.text(
+      `Lugar: ${
+        orden.evento_id?.lugar ||
+        "Lugar a confirmar"
+      }`
+    );
 
-    // 🧾 QR
+    doc.moveDown();
+
+    // 📅 FECHA EVENTO
+
+    const fechaEvento =
+      orden.evento_id?.fecha
+        ? new Date(
+            orden.evento_id.fecha
+          ).toLocaleDateString("es-AR")
+        : "Fecha a confirmar";
+
+    doc.text(
+      `Fecha: ${fechaEvento}`
+    );
+
+    doc.moveDown();
+
+    // 🕒 HORA EVENTO
+
+    doc.text(
+      `Hora: ${
+        orden.evento_id?.hora ||
+        "Horario a confirmar"
+      }`
+    );
+
+    doc.moveDown(1);
+
+    // 🎟️ TEXTO QR
 
     doc
       .fontSize(16)
-      .text("Código QR", {
-        align: "center"
-      });
+      .fillColor("#111")
+      .text(
+        "Escaneá en puerta",
+        {
+          align: "center"
+        }
+      );
 
     doc.moveDown();
 
-    // 👉 ticket.qr_code es base64
+    // 🔥 QR CENTRADO
 
-    const base64Data = ticket.qr_code.replace(
-      /^data:image\/png;base64,/,
-      ""
-    );
+    const qrSize = 170;
 
-    const qrBuffer = Buffer.from(base64Data, "base64");
+    const pageWidth =
+      doc.page.width;
+
+    const x =
+      (pageWidth - qrSize) / 2;
 
     doc.image(
+
       Buffer.from(
         ticket.qr_code.split(",")[1],
         "base64"
       ),
+
+      x,
+
+      doc.y,
+
       {
-        fit: [200, 200],
-        align: "center"
+        width: qrSize,
+        height: qrSize
       }
+
     );
 
-    doc.moveDown(2);
+    doc.moveDown(12);
+
+    // 🔑 CÓDIGO
+
+    doc
+      .fontSize(16)
+      .fillColor("#7c3aed")
+      .text(
+
+        `Código: NEXO-${ticket._id
+          .toString()
+          .slice(-5)}`,
+
+        {
+          align: "center"
+        }
+
+      );
+
+    doc.moveDown(1);
 
     // 🦶 FOOTER
 
     doc
-      .fontSize(12)
+      .fontSize(11)
       .fillColor("gray")
       .text(
         "Presentar este ticket al ingresar al evento",
+        {
+          align: "center"
+        }
+      );
+
+    doc.moveDown();
+
+    doc
+      .fontSize(10)
+      .fillColor("#999")
+      .text(
+        "NEXO Tickets • Powered by MercadoPago",
         {
           align: "center"
         }

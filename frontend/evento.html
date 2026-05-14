@@ -95,14 +95,6 @@
 
       </div>
 
-      <!-- PDF -->
-      <button
-        onclick="descargarListado()"
-        class="mt-6 w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-semibold"
-      >
-        📄 Descargar listado de compradores (PDF)
-      </button>
-
     </div>
 
   </div>
@@ -207,65 +199,6 @@
 
     window.location.href =
       "/checkout.html";
-
-  }
-
-  // 📄 DESCARGAR PDF
-
-  async function descargarListado(){
-
-    try{
-
-      const response = await fetch(
-
-        `http://localhost:3000/api/reportes/eventos/${evento._id}/pdf`
-
-      );
-
-      if(!response.ok){
-
-        alert(
-          "Error generando PDF"
-        );
-
-        return;
-
-      }
-
-      const blob =
-        await response.blob();
-
-      const url =
-        window.URL.createObjectURL(blob);
-
-      const a =
-        document.createElement("a");
-
-      a.href = url;
-
-      const nombreEvento =
-        evento.nombre.replace(/\s+/g, "_");
-
-      a.download =
-        `NEXO_${nombreEvento}.pdf`;
-
-      document.body.appendChild(a);
-
-      a.click();
-
-      a.remove();
-
-      window.URL.revokeObjectURL(url);
-
-    }catch(error){
-
-      console.error(error);
-
-      alert(
-        "Error descargando PDF"
-      );
-
-    }
 
   }
 

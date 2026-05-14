@@ -415,10 +415,9 @@ async (req, res) => {
 
     }
 
-    const orden =
-      await Orden.findById(
-        ticket.orden_id
-      );
+    const orden = await Orden
+      .findById(ticket.orden_id)
+      .populate("evento_id");
 
     const pdfBuffer =
       await generarPDF(

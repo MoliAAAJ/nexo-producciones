@@ -43,6 +43,9 @@ const eventoSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
+    hora: {
+      type: String
+    },
     imagen: {
       type: String,
       trim: true
