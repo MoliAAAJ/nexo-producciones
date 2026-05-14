@@ -8,53 +8,52 @@ export const enviarTicketsEmail = async ({
 
   try {
 
-    const transporter =
-      nodemailer.createTransport({
+    console.log("📧 Iniciando envío de email...");
 
-        service: "gmail",
+    const transporter = nodemailer.createTransport({
 
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS
-        }
+      service: "gmail",
 
-      });
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
 
-    // 📎 PDFs adjuntos
-    const attachments =
-      tickets.map(ticket => ({
+    });
 
-        filename:
-          `ticket-${ticket._id}.pdf`,
+    // ✅ verificar conexión gmail
 
-        path:
-          `${process.env.BASE_URL}/api/ticket/${ticket._id}/pdf`
+    await transporter.verify();
 
-      }));
+    console.log("✅ Gmail conectado");
 
-    await transporter.sendMail({
+    const attachments = tickets.map(ticket => ({
 
-      from:
-        `"NEXO Tickets" <${process.env.EMAIL_USER}>`,
+      filename: `ticket-${ticket._id}.pdf`,
 
-      to:
-        cliente.email,
+      href:
+  `     ${process.env.BASE_URL}/api/orden/ticket/${ticket._id}/pdf`
 
-      subject:
-        `Tus entradas para ${evento.nombre}`,
+    }));
+
+    console.log("📎 Adjuntos:", attachments.length);
+
+    const info = await transporter.sendMail({
+
+      from: `"NEXO Tickets" <${process.env.EMAIL_USER}>`,
+
+      to: cliente.email,
+
+      subject: `Tus entradas para ${evento.nombre}`,
 
       html: `
 
         <div style="
           font-family:Arial;
           padding:20px;
-          background:#111;
-          color:white;
         ">
 
-          <h1 style="
-            color:#7c3aed;
-          ">
+          <h1 style="color:#7c3aed;">
             🎟️ Compra confirmada
           </h1>
 
@@ -73,21 +72,19 @@ export const enviarTicketsEmail = async ({
           </p>
 
           <p>
-            Gracias por comprar con NEXO.
+            ¡Gracias por comprar con NEXO!
           </p>
 
         </div>
 
       `,
 
-      // 🔥 ACÁ ESTABA EL BUG
       attachments
 
     });
 
-    console.log(
-      "📧 Mail enviado correctamente"
-    );
+    console.log("✅ MAIL ENVIADO");
+    console.log(info);
 
   } catch (error) {
 
@@ -95,7 +92,7 @@ export const enviarTicketsEmail = async ({
       "❌ ERROR ENVIANDO MAIL:"
     );
 
-    console.log(error);
+    console.error(error);
 
   }
 

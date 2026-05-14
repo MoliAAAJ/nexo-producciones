@@ -7,6 +7,9 @@ import Ticket from "../models/Ticket.js";
 
 import { generarQR } from "../utils/generarQR.js";
 
+import { enviarTicketsEmail }
+from "../utils/enviarTicketsEmail.js";
+
 const router = express.Router();
 
 const client = new MercadoPagoConfig({
@@ -87,13 +90,13 @@ router.post("/webhook", async (req, res) => {
 
     // 🎟️ GENERAR TICKETS
 
+    const ticketsGenerados = [];
+
     for (const item of orden.items) {
 
       const evento = orden.evento_id;
 
       for (let i = 0; i < item.cantidad; i++) {
-
-        // crear ticket
 
         const ticket = new Ticket({
 
@@ -107,19 +110,32 @@ router.post("/webhook", async (req, res) => {
 
         });
 
-        // generar QR usando ticket._id
-
-        ticket.qr_code = await generarQR(ticket._id);
-
-        // guardar ticket
+        ticket.qr_code =
+          await generarQR(ticket._id);
 
         await ticket.save();
+
+        ticketsGenerados.push(ticket);
 
       }
 
     }
 
     console.log("🎟️ Tickets generados correctamente");
+
+    // ✅ ENVIAR EMAIL
+
+    await enviarTicketsEmail({
+
+      cliente: orden.cliente,
+
+      evento: orden.evento_id,
+
+      tickets: ticketsGenerados
+
+    });
+
+    console.log("📧 Email enviado");
 
     return res.sendStatus(200);
 

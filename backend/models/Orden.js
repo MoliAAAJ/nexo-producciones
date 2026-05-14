@@ -81,4 +81,4 @@ const ordenSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Orden", ordenSchema);
+export default mongoose.model("Orden", ordenSchema, "ordenes");
