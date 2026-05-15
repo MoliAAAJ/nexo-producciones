@@ -2,30 +2,46 @@ import express from "express";
 
 import Ticket from "../models/Ticket.js";
 
+import {
+  descargarTicketPDF
+} from "../controllers/orden.controller.js";
+
 const router = express.Router();
 
+/**
+ * 🎟️ VALIDAR TICKET
+ */
 router.post("/validar", async (req, res) => {
 
-  try{
+  try {
 
     const { ticketId } = req.body;
 
-    const ticket = await Ticket.findById(ticketId);
+    const ticket =
+      await Ticket.findById(ticketId);
 
-    if(!ticket){
+    if (!ticket) {
 
       return res.json({
-        ok:false,
-        message:"Ticket inválido"
+
+        ok: false,
+
+        message:
+          "Ticket inválido"
+
       });
 
     }
 
-    if(ticket.usado){
+    if (ticket.usado) {
 
       return res.json({
-        ok:false,
-        message:"Ticket ya utilizado"
+
+        ok: false,
+
+        message:
+          "Ticket ya utilizado"
+
       });
 
     }
@@ -35,21 +51,38 @@ router.post("/validar", async (req, res) => {
     await ticket.save();
 
     return res.json({
-      ok:true,
-      message:"Ticket válido"
+
+      ok: true,
+
+      message:
+        "Ticket válido"
+
     });
 
-  }catch(error){
+  } catch (error) {
 
     console.error(error);
 
     return res.status(500).json({
-      ok:false,
-      message:"Error servidor"
+
+      ok: false,
+
+      message:
+        "Error servidor"
+
     });
 
   }
 
 });
+
+
+/**
+ * 📄 DESCARGAR PDF
+ */
+router.get(
+  "/:id/pdf",
+  descargarTicketPDF
+);
 
 export default router;

@@ -9,87 +9,164 @@
     content="width=device-width, initial-scale=1.0"
   />
 
-  <title>Evento - NEXO</title>
+  <title>Evento - NEXO Tickets</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  />
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  />
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+
+    * {
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: #0f0f12;
+    }
+
+  </style>
+
 </head>
 
-<body class="bg-gray-900 text-white">
+<body class="text-white min-h-screen flex flex-col">
 
-  <div class="max-w-4xl mx-auto p-6">
+  <!-- HEADER -->
 
-    <!-- BACK -->
-    <button
-      onclick="history.back()"
-      class="text-purple-400 mb-4"
-    >
-      ← Volver
-    </button>
+  <header class="sticky top-0 z-50 bg-black/70 backdrop-blur border-b border-white/10">
 
-    <!-- EVENTO -->
-    <div
-      id="evento"
-      class="bg-gray-800 p-6 rounded-2xl"
-    >
+    <div class="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
 
-      <h1
-        id="nombre"
-        class="text-3xl font-bold text-purple-400"
-      ></h1>
+      <!-- LEFT -->
 
-      <p
-        id="fecha"
-        class="text-gray-400 mt-2"
-      ></p>
+      <div class="flex items-center gap-3">
 
-      <p
-        id="lugar"
-        class="text-gray-400"
-      ></p>
+        <img
+          src="/assets/logo.png"
+          alt="NEXO"
+          class="h-24 w-auto"
+        />
 
-      <img
-        id="imagen"
-        class="w-full h-64 object-cover rounded-xl mt-4"
-      />
+      </div>
 
-      <p
-        id="descripcion"
-        class="mt-4 text-gray-300"
-      ></p>
+      <!-- CENTER -->
 
-      <!-- COMPRA -->
-      <div
-        class="bg-gray-700 p-5 rounded-xl mt-6"
+      <button
+        onclick="abrirFAQ()"
+        class="bg-purple-600 hover:bg-purple-700 transition px-5 py-2 rounded-xl font-semibold text-sm"
       >
+        Ayuda
+      </button>
 
-        <h2 class="text-xl font-semibold mb-3">
-          🎟️ Entrada General
-        </h2>
+      <!-- RIGHT -->
 
-        <p
-          id="precio"
-          class="text-green-400 text-2xl font-bold"
-        ></p>
+      <div class="text-right">
 
-        <div
-          class="flex items-center gap-3 mt-4"
-        >
+        <h1 class="text-xl font-extrabold tracking-wide text-purple-400">
 
-          <input
-            type="number"
-            min="1"
-            value="1"
-            id="cantidad"
-            class="w-24 p-2 rounded bg-gray-800"
-          />
+          NEXO
+          <span class="text-white">
+            Tickets
+          </span>
 
-          <button
-            onclick="comprar()"
-            class="bg-purple-600 hover:bg-purple-700 px-5 py-2 rounded-lg font-semibold"
-          >
-            Comprar
-          </button>
+        </h1>
+
+      </div>
+
+    </div>
+
+  </header>
+
+  <!-- BODY -->
+
+  <main class="flex-1 py-10 px-5">
+
+    <div
+      id="container"
+      class="max-w-6xl mx-auto"
+    ></div>
+
+  </main>
+
+  <!-- FOOTER -->
+
+  <footer class="border-t border-white/10 py-6 text-center text-sm text-gray-500">
+
+    © 2026 NEXO Tickets · Todos los derechos reservados
+
+  </footer>
+
+  <!-- FAQ MODAL -->
+
+  <div
+    id="faqModal"
+    class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 px-5"
+  >
+
+    <div class="bg-gray-900 border border-white/10 rounded-3xl w-full max-w-2xl p-8 relative">
+
+      <button
+        onclick="cerrarFAQ()"
+        class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl"
+      >
+        ×
+      </button>
+
+      <h2 class="text-3xl font-bold mb-8 text-purple-400">
+
+        Preguntas Frecuentes
+
+      </h2>
+
+      <div class="space-y-6 text-gray-300">
+
+        <div>
+
+          <h3 class="font-bold text-white mb-2">
+            ¿Cómo recibo mis entradas?
+          </h3>
+
+          <p>
+            Luego de realizar el pago recibirás un email con tus tickets.
+          </p>
+
+        </div>
+
+        <div>
+
+          <h3 class="font-bold text-white mb-2">
+            ¿Debo imprimir la entrada?
+          </h3>
+
+          <p>
+            No. Podés presentar el PDF desde tu celular.
+          </p>
+
+        </div>
+
+        <div>
+
+          <h3 class="font-bold text-white mb-2">
+            ¿Cuándo debo llegar?
+          </h3>
+
+          <p>
+            Recomendamos presentarse 15 minutos antes con DNI.
+          </p>
 
         </div>
 
@@ -106,69 +183,135 @@
       localStorage.getItem("evento")
     );
 
+  const container =
+    document.getElementById("container");
+
   if (!evento) {
 
-    document.body.innerHTML = `
+    container.innerHTML = `
 
-      <div class="p-10 text-center">
+      <div class="text-center text-red-400 text-2xl">
+        Evento no encontrado
+      </div>
 
-        <h1 class="text-red-400 text-2xl">
-          Evento no encontrado
-        </h1>
+    `;
+
+  } else {
+
+    const fecha =
+      new Date(evento.fecha)
+      .toLocaleDateString("es-AR");
+
+    const precio =
+      evento.entradas?.[0]?.precio || 0;
+
+    container.innerHTML = `
+
+      <div class="grid lg:grid-cols-2 gap-10 items-start">
+
+        <!-- IMAGEN -->
+
+        <div>
+
+          <img
+            src="${evento.imagen}"
+            class="w-full h-[500px] object-cover rounded-3xl shadow-2xl"
+          />
+
+        </div>
+
+        <!-- INFO -->
+
+        <div>
+
+          <!-- BADGE -->
+
+          <div class="mb-4">
+
+            <span class="bg-purple-600 px-4 py-2 rounded-full text-sm font-semibold">
+
+              ${evento.categoria || "Evento"}
+
+            </span>
+
+          </div>
+
+          <!-- TITULO -->
+
+          <h1 class="text-5xl font-extrabold leading-tight">
+
+            ${evento.nombre}
+
+          </h1>
+
+          <!-- DESCRIPCION -->
+
+          <p class="mt-6 text-gray-300 text-lg leading-relaxed">
+
+            ${evento.descripcion || "Próximamente más información sobre este evento."}
+
+          </p>
+
+          <!-- INFO EVENTO -->
+
+          <div class="mt-8 space-y-4 text-lg">
+
+            <div class="flex items-center gap-3">
+              <span>📅</span>
+              <span>${fecha}</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <span>🕒</span>
+              <span>${evento.hora || "Horario a confirmar"}</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <span>📍</span>
+              <span>${evento.lugar || "Lugar a confirmar"}</span>
+            </div>
+
+          </div>
+
+          <!-- PRECIO -->
+
+          <div class="mt-10">
+
+            <p class="text-gray-400 text-sm mb-2">
+              Entrada General
+            </p>
+
+            <h2 class="text-5xl font-extrabold text-green-400">
+
+              $${precio}
+
+            </h2>
+
+          </div>
+
+          <!-- CTA -->
+
+          <button
+            onclick="comprar()"
+            class="mt-10 w-full bg-purple-600 hover:bg-purple-700 transition py-5 rounded-2xl text-xl font-bold shadow-2xl"
+          >
+
+            Quiero asistir
+
+          </button>
+
+        </div>
 
       </div>
 
     `;
 
-    throw new Error(
-      "Evento no encontrado"
-    );
-
   }
 
-  // 🔥 DATOS EVENTO
+  function comprar() {
 
-  document.getElementById("nombre").innerText =
-    evento.nombre;
-
-  document.getElementById("fecha").innerText =
-    evento.fecha;
-
-  document.getElementById("lugar").innerText =
-    evento.lugar;
-
-  document.getElementById("descripcion").innerText =
-    evento.descripcion || "Sin descripción";
-
-  document.getElementById("imagen").src =
-    evento.imagen;
-
-  // 🔥 PRECIO
-
-  const entrada =
-    evento.entradas?.[0];
-
-  if (!entrada) {
-
-    alert("El evento no tiene entradas");
-
-    throw new Error(
-      "Sin entradas"
-    );
-
-  }
-
-  document.getElementById("precio").innerText =
-    `$${entrada.precio}`;
-
-  // 🔥 COMPRAR
-
-  function comprar(){
-
-    const cantidad =
-      Number(
-        document.getElementById("cantidad").value
-      ) || 1;
+    const precio =
+      evento.entradas?.[0]?.precio || 0;
 
     localStorage.setItem(
 
@@ -176,22 +319,17 @@
 
       JSON.stringify({
 
-        eventoId:
-          evento._id,
+        eventoId: evento._id,
 
-        eventoNombre:
-          evento.nombre,
+        eventoNombre: evento.nombre,
 
-        tipo:
-          "General",
+        tipo: "General",
 
-        precio:
-          entrada.precio,
+        precio,
 
-        cantidad,
+        cantidad: 1,
 
-        total:
-          entrada.precio * cantidad
+        total: precio
 
       })
 
@@ -199,6 +337,30 @@
 
     window.location.href =
       "/checkout.html";
+
+  }
+
+  function abrirFAQ() {
+
+    document
+      .getElementById("faqModal")
+      .classList.remove("hidden");
+
+    document
+      .getElementById("faqModal")
+      .classList.add("flex");
+
+  }
+
+  function cerrarFAQ() {
+
+    document
+      .getElementById("faqModal")
+      .classList.add("hidden");
+
+    document
+      .getElementById("faqModal")
+      .classList.remove("flex");
 
   }
 

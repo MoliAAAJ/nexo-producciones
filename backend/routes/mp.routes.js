@@ -125,13 +125,20 @@ router.post("/webhook", async (req, res) => {
 
     // ✅ ENVIAR EMAIL
 
-    await enviarTicketsEmail({
+    enviarTicketsEmail({
 
       cliente: orden.cliente,
 
       evento: orden.evento_id,
 
       tickets: ticketsGenerados
+
+    }).catch(error => {
+
+        console.error(
+          "❌ Error mail:",
+        error
+        );
 
     });
 

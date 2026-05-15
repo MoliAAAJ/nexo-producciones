@@ -4,10 +4,7 @@
  * 🌐 CONFIG API
  */
 const API_URL =
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1"
-    ? "http://localhost:3000"
-    : "https://api.nexoesquel.com";
+  window.location.origin;
 
 /**
  * 🧠 STATE GLOBAL SIMPLE
@@ -32,10 +29,15 @@ const confirmarCompra = document.getElementById("confirmarCompra");
  * 📦 STORAGE HELPERS
  */
 const save = (key, value) =>
-  localStorage.setItem(key, JSON.stringify(value));
+  localStorage.setItem(
+    key,
+    JSON.stringify(value)
+  );
 
 const get = (key) =>
-  JSON.parse(localStorage.getItem(key));
+  JSON.parse(
+    localStorage.getItem(key)
+  );
 
 /**
  * 🎟️ ABRIR MODAL
@@ -43,10 +45,15 @@ const get = (key) =>
 function abrirModal(evento, entrada) {
 
   compraActual = {
+
     eventoId: evento._id,
+
     nombre: evento.nombre,
+
     precio: entrada.precio,
+
     tipo: entrada.tipo
+
   };
 
   cantidadEntradas.value = 1;
@@ -61,16 +68,26 @@ function abrirModal(evento, entrada) {
  * ❌ CERRAR MODAL
  */
 function cerrarModalFn() {
+
   modal.classList.add("hidden");
+
 }
 
-cerrarModal.onclick = cerrarModalFn;
+cerrarModal.onclick =
+  cerrarModalFn;
 
 modal.onclick = (e) => {
-  if (e.target === modal) cerrarModalFn();
+
+  if (e.target === modal) {
+
+    cerrarModalFn();
+
+  }
+
 };
 
-cantidadEntradas.oninput = actualizarTotal;
+cantidadEntradas.oninput =
+  actualizarTotal;
 
 /**
  * 💰 CALCULAR TOTAL
@@ -78,10 +95,13 @@ cantidadEntradas.oninput = actualizarTotal;
 function actualizarTotal() {
 
   const cantidad =
-    Number(cantidadEntradas.value) || 1;
+    Number(
+      cantidadEntradas.value
+    ) || 1;
 
   const total =
-    cantidad * compraActual.precio;
+    cantidad *
+    compraActual.precio;
 
   montoTotalElem.textContent =
     total.toLocaleString("es-AR");
@@ -91,66 +111,101 @@ function actualizarTotal() {
 /**
  * 💳 CREAR ORDEN
  */
-confirmarCompra.onclick = async () => {
+confirmarCompra.onclick =
+async () => {
 
   try {
 
     const cantidad =
-      Number(cantidadEntradas.value) || 1;
+      Number(
+        cantidadEntradas.value
+      ) || 1;
 
     confirmarCompra.disabled = true;
-    confirmarCompra.textContent = "Procesando...";
+
+    confirmarCompra.textContent =
+      "Procesando...";
 
     /**
-     * 👤 TRAER CLIENTE REAL
-     * (viene de checkout futuro o localStorage)
+     * 👤 CLIENTE
      */
-    const buyer = get("buyer");
+    const buyer =
+      get("buyer");
 
     if (!buyer) {
 
-      alert("Faltan datos del comprador");
+      alert(
+        "Faltan datos del comprador"
+      );
 
-      window.location.href = "checkout.html";
+      window.location.href =
+        "checkout.html";
 
       return;
 
     }
 
-    const response = await fetch(
-      `${API_URL}/api/orden`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
+    const response =
+      await fetch(
 
-          evento_id: compraActual.eventoId,
+        `${API_URL}/api/orden`,
 
-          items: [
-            {
-              tipo: compraActual.tipo,
-              cantidad
-            }
-          ],
+        {
 
-          cliente: buyer
+          method: "POST",
 
-        })
-      }
+          headers: {
+
+            "Content-Type":
+              "application/json"
+
+          },
+
+          body: JSON.stringify({
+
+            evento_id:
+              compraActual.eventoId,
+
+            items: [
+
+              {
+
+                tipo:
+                  compraActual.tipo,
+
+                cantidad
+
+              }
+
+            ],
+
+            cliente: buyer
+
+          })
+
+        }
+
+      );
+
+    const data =
+      await response.json();
+
+    console.log(
+      "🧾 ORDEN:",
+      data
     );
-
-    const data = await response.json();
-
-    console.log("🧾 ORDEN:", data);
 
     if (!data.ok) {
 
-      alert(data.error || "Error creando orden");
+      alert(
+        data.error ||
+        "Error creando orden"
+      );
 
       confirmarCompra.disabled = false;
-      confirmarCompra.textContent = "Confirmar";
+
+      confirmarCompra.textContent =
+        "Confirmar";
 
       return;
 
@@ -159,26 +214,42 @@ confirmarCompra.onclick = async () => {
     /**
      * 💾 GUARDAR ORDEN
      */
-    save("orden_id", data.orden_id);
+    save(
+      "orden_id",
+      data.orden_id
+    );
 
-    save("compra", {
-      evento: compraActual,
-      cantidad
-    });
+    save(
+      "compra",
+      {
+
+        evento:
+          compraActual,
+
+        cantidad
+
+      }
+
+    );
 
     /**
-     * 🔥 REDIRECCIÓN A MP
+     * 🔥 REDIRECCIÓN MP
      */
-    window.location.href = data.init_point;
+    window.location.href =
+      data.init_point;
 
   } catch (error) {
 
     console.error(error);
 
-    alert("Error procesando compra");
+    alert(
+      "Error procesando compra"
+    );
 
     confirmarCompra.disabled = false;
-    confirmarCompra.textContent = "Confirmar";
+
+    confirmarCompra.textContent =
+      "Confirmar";
 
   }
 
@@ -187,26 +258,47 @@ confirmarCompra.onclick = async () => {
 /**
  * 📅 FORMATEAR FECHA
  */
-function formatearFecha(fechaStr) {
+function formatearFecha(
+  fechaStr
+) {
 
-  if (!fechaStr) return "";
+  if (!fechaStr) {
 
-  if (fechaStr.includes("/")) {
-
-    const [d, m, y] = fechaStr.split("/");
-    fechaStr = `${y}-${m}-${d}`;
+    return "";
 
   }
 
-  const fecha = new Date(fechaStr);
+  if (
+    fechaStr.includes("/")
+  ) {
+
+    const [d, m, y] =
+      fechaStr.split("/");
+
+    fechaStr =
+      `${y}-${m}-${d}`;
+
+  }
+
+  const fecha =
+    new Date(fechaStr);
 
   return isNaN(fecha)
+
     ? fechaStr
-    : fecha.toLocaleDateString("es-AR", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric"
-      });
+
+    : fecha.toLocaleDateString(
+        "es-AR",
+        {
+
+          day: "2-digit",
+
+          month: "long",
+
+          year: "numeric"
+
+        }
+      );
 
 }
 
@@ -216,15 +308,20 @@ function formatearFecha(fechaStr) {
 async function cargarEventos() {
 
   const contenedor =
-    document.getElementById("eventos");
+    document.getElementById(
+      "eventos"
+    );
 
   contenedor.innerHTML =
+
     "<p class='text-gray-400 animate-pulse'>Cargando eventos...</p>";
 
   try {
 
     const response =
-      await fetch(`${API_URL}/eventos`);
+      await fetch(
+        `${API_URL}/eventos`
+      );
 
     const eventos =
       await response.json();
@@ -233,30 +330,48 @@ async function cargarEventos() {
 
     eventos.forEach(ev => {
 
-      const nombre = ev.nombre || "Evento sin nombre";
-      const fecha = ev.fecha || "";
-      const lugar = ev.lugar || "";
-      const imagen = ev.imagen || "";
-      const estado = ev.estado?.toLowerCase() || "agotado";
+      const nombre =
+        ev.nombre ||
+        "Evento sin nombre";
 
-      const agotado = estado !== "activo";
+      const fecha =
+        ev.fecha || "";
+
+      const lugar =
+        ev.lugar || "";
+
+      const imagen =
+        ev.imagen || "";
+
+      const estado =
+        ev.estado?.toLowerCase() ||
+        "agotado";
+
+      const agotado =
+        estado !== "activo";
 
       const tarjeta =
         document.createElement("div");
 
       tarjeta.className =
+
         "bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-transform";
-      
-      // 👉 CLICK A EVENTO (IR A PÁGINA DETALLE)
+
+      /**
+       * 👉 IR A EVENTO
+       */
       tarjeta.onclick = () => {
 
         localStorage.setItem(
+
           "evento",
+
           JSON.stringify(ev)
+
         );
 
         window.location.href =
-        "evento.html";
+          "evento.html";
 
       };
 
@@ -266,18 +381,29 @@ async function cargarEventos() {
       const imgWrapper =
         document.createElement("div");
 
-      imgWrapper.className = "relative";
+      imgWrapper.className =
+        "relative";
 
       const img =
         document.createElement("img");
 
-      img.src = imagen || "imagenes/nexo_back.jpg";
+      img.src =
+        imagen ||
+        "imagenes/nexo_back.jpg";
+
       img.alt = nombre;
-      img.className = "w-full h-48 object-cover bg-gray-700";
+
+      img.className =
+
+        "w-full h-48 object-cover bg-gray-700";
+
       img.loading = "lazy";
 
       img.onerror = () => {
-        img.src = "imagenes/nexo_back.jpg";
+
+        img.src =
+          "imagenes/nexo_back.jpg";
+
       };
 
       imgWrapper.appendChild(img);
@@ -288,11 +414,15 @@ async function cargarEventos() {
           document.createElement("div");
 
         badge.className =
+
           "absolute top-2 left-2 bg-red-600 text-white font-bold px-3 py-1 rounded-lg text-sm";
 
-        badge.textContent = "AGOTADO";
+        badge.textContent =
+          "AGOTADO";
 
-        imgWrapper.appendChild(badge);
+        imgWrapper.appendChild(
+          badge
+        );
 
       }
 
@@ -302,26 +432,42 @@ async function cargarEventos() {
       const contenido =
         document.createElement("div");
 
-      contenido.className = "p-5";
+      contenido.className =
+        "p-5";
 
       const h3 =
         document.createElement("h3");
 
-      h3.className = "text-xl font-semibold text-purple-300";
-      h3.textContent = nombre;
+      h3.className =
+
+        "text-xl font-semibold text-purple-300";
+
+      h3.textContent =
+        nombre;
 
       const pInfo =
         document.createElement("p");
 
-      pInfo.className = "text-gray-400 text-sm mt-1";
-      pInfo.textContent = `${formatearFecha(fecha)} — ${lugar}`;
+      pInfo.className =
 
-      contenido.append(h3, pInfo);
+        "text-gray-400 text-sm mt-1";
+
+      pInfo.textContent =
+
+        `${formatearFecha(fecha)} — ${lugar}`;
+
+      contenido.append(
+        h3,
+        pInfo
+      );
 
       /**
        * 🎟️ ENTRADAS
        */
-      if (!agotado && ev.entradas?.length) {
+      if (
+        !agotado &&
+        ev.entradas?.length
+      ) {
 
         const entrada =
           ev.entradas[0];
@@ -332,23 +478,40 @@ async function cargarEventos() {
         const pPrecio =
           document.createElement("p");
 
-          pPrecio.className =
-            "text-yellow-400 font-semibold text-md mt-2";
+        pPrecio.className =
 
-          pPrecio.textContent =
-            `Entrada General: $${precio.toLocaleString("es-AR")}`;
+          "text-yellow-400 font-semibold text-md mt-2";
+
+        pPrecio.textContent =
+
+          `Entrada General: $${precio.toLocaleString("es-AR")}`;
 
         const boton =
           document.createElement("button");
 
-          boton.className =
-            "mt-3 w-full py-2 rounded-lg font-medium text-white bg-purple-600 hover:bg-purple-700";
+        boton.className =
 
-          boton.textContent =
-            "Ver evento";
+          "mt-3 w-full py-2 rounded-lg font-medium text-white bg-purple-600 hover:bg-purple-700";
 
-          boton.onclick = () =>
-            abrirEvento(ev);
+        boton.textContent =
+          "Ver evento";
+
+        boton.onclick = (e) => {
+
+          e.stopPropagation();
+
+          localStorage.setItem(
+
+            "evento",
+
+            JSON.stringify(ev)
+
+          );
+
+          window.location.href =
+            "evento.html";
+
+        };
 
         contenido.append(
           pPrecio,
@@ -361,18 +524,27 @@ async function cargarEventos() {
           document.createElement("p");
 
         agotadoTxt.className =
+
           "text-red-400 mt-3 font-semibold";
 
         agotadoTxt.textContent =
+
           "Entradas agotadas";
 
-        contenido.appendChild(agotadoTxt);
+        contenido.appendChild(
+          agotadoTxt
+        );
 
       }
 
-      tarjeta.append(imgWrapper, contenido);
+      tarjeta.append(
+        imgWrapper,
+        contenido
+      );
 
-      contenedor.appendChild(tarjeta);
+      contenedor.appendChild(
+        tarjeta
+      );
 
     });
 
@@ -381,6 +553,7 @@ async function cargarEventos() {
     console.error(error);
 
     contenedor.innerHTML =
+
       "<p class='text-red-400'>Error al cargar los eventos.</p>";
 
   }

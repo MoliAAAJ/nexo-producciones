@@ -2,12 +2,8 @@ import Evento from "../models/Evento.js";
 import Orden from "../models/Orden.js";
 import Ticket from "../models/Ticket.js";
 
-import { generarQR } from "../utils/generarQR.js";
 import { generarPDF } from "../utils/generarPDF.js";
 import { preferenceClient } from "../config/mp.js";
-
-import { enviarTicketsEmail }
-from "../utils/enviarTicketsEmail.js";
 
 /**
  * 🧾 CREAR ORDEN
@@ -172,165 +168,15 @@ export const crearOrden = async (req, res) => {
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "❌ Error creando orden:",
+      error
+    );
 
     return res.status(500).json({
       error:
         "Error al procesar compra"
     });
-
-  }
-
-};
-
-
-/**
- * 🎟️ WEBHOOK MP
- */
-export const mpWebhook = async (
-  req,
-  res
-) => {
-
-  try {
-
-    console.log(
-      "🔥 WEBHOOK RECIBIDO"
-    );
-
-    const paymentId =
-      req.query["data.id"] ||
-      req.body?.data?.id;
-
-    if (!paymentId) {
-
-      return res.sendStatus(200);
-
-    }
-
-    const response = await fetch(
-
-      `https://api.mercadopago.com/v1/payments/${paymentId}`,
-
-      {
-        headers: {
-          Authorization:
-            `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`
-        }
-      }
-
-    );
-
-    const payment =
-      await response.json();
-
-    const ordenId =
-      payment.external_reference;
-
-    if (!ordenId) {
-
-      return res.sendStatus(200);
-
-    }
-
-    const orden =
-      await Orden.findById(ordenId);
-
-    if (!orden) {
-
-      return res.sendStatus(200);
-
-    }
-
-    if (
-      orden.estado === "pagado"
-    ) {
-
-      console.log(
-        "⚠️ Orden ya pagada"
-      );
-
-      return res.sendStatus(200);
-
-    }
-
-    orden.estado = "pagado";
-
-    await orden.save();
-
-    const tickets = [];
-
-    for (const item of orden.items) {
-
-      for (
-        let i = 0;
-        i < item.cantidad;
-        i++
-      ) {
-
-        const ticket =
-          new Ticket({
-
-            orden_id:
-              orden._id,
-
-            evento_id:
-              orden.evento_id,
-
-            tipo:
-              item.tipo,
-
-            usado: false
-
-          });
-
-        ticket.qr_code =
-          await generarQR(
-            ticket._id.toString()
-          );
-
-        tickets.push(ticket);
-
-      }
-
-    }
-
-    const ticketsGuardados =
-      await Ticket.insertMany(
-        tickets
-      );
-
-    const evento =
-      await Evento.findById(
-        orden.evento_id
-      );
-
-    await enviarTicketsEmail({
-
-      cliente:
-        orden.cliente,
-
-      evento,
-
-      tickets:
-        ticketsGuardados
-
-    });
-
-    console.log(
-      "🎟️ Tickets generados correctamente"
-    );
-
-    return res.sendStatus(200);
-
-  } catch (error) {
-
-    console.error(
-      "❌ Error webhook:",
-      error
-    );
-
-    return res.sendStatus(500);
 
   }
 
@@ -350,7 +196,7 @@ export const obtenerOrden = async (
     const orden =
       await Orden.findById(
         req.params.id
-      );
+      ).populate("evento_id");
 
     if (!orden) {
 
@@ -394,7 +240,7 @@ export const obtenerOrden = async (
 
 
 /**
- * 📄 PDF
+ * 📄 DESCARGAR PDF
  */
 export const descargarTicketPDF =
 async (req, res) => {
