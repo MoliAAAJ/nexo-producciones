@@ -8,7 +8,7 @@ function renderNavbar() {
 
         <!-- LOGO -->
         <img
-          src="/public/assets/logo.png"
+          src="/public/assets/nexo_logo_transparente.png"
           alt="NEXO"
           class="h-24 w-auto cursor-pointer"
           onclick="window.location.href='/'"

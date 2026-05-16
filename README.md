@@ -81,7 +81,7 @@ nexo-producciones/
 │   ├── routes/
 │   ├── utils/
 │   ├── assets/
-│   │   └── logo.png
+│   │   └── nexo_logo_transparente.png
 │   ├── .env
 │   ├── package.json
 │   └── server.js

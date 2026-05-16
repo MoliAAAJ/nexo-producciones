@@ -23,7 +23,7 @@ export function initEventoPage() {
 }
 
 /**
- * 🧯 SAFE PARSE EVENTO
+ * 🧯 SAFE GET
  */
 function safeGetEvento() {
   try {
@@ -50,6 +50,41 @@ function renderError(container) {
 }
 
 /**
+ * 🧠 IMAGE NORMALIZER (CRÍTICO)
+ */
+function getImagen(evento) {
+
+  const img = evento?.imagen;
+
+  const fallback = "/assets/images/events/nexo_back.jpg";
+
+  if (!img || typeof img !== "string") {
+    return fallback;
+  }
+
+  // 🔥 URL externa (ej: cloudinary, etc)
+  if (img.startsWith("http")) return img;
+
+  // 🔥 ya viene bien estructurada
+  if (img.startsWith("/assets/")) return img;
+
+  // 🔥 solo filename (1.jpg)
+  if (!img.includes("/")) {
+    return `/assets/images/events/${img}`;
+  }
+
+  // 🔥 basura legacy (/images, public/images, etc)
+  return img
+    .replace("/public", "")
+    .replace("public/", "")
+    .replace("/images/", "/assets/images/")
+    .replace("//", "/")
+    .startsWith("/")
+      ? img
+      : `/assets/images/events/${img}`;
+}
+
+/**
  * 🎟️ RENDER EVENTO
  */
 function renderEvento(container, evento) {
@@ -64,7 +99,8 @@ function renderEvento(container, evento) {
   const nombre = evento.nombre || "Evento sin nombre";
   const descripcion = evento.descripcion || "";
   const categoria = evento.categoria || "Evento";
-  const imagen = evento.imagen || "";
+
+  const imagen = getImagen(evento);
 
   container.innerHTML = `
     <div class="grid lg:grid-cols-2 gap-10">
@@ -73,6 +109,7 @@ function renderEvento(container, evento) {
         src="${imagen}"
         alt="${nombre}"
         class="rounded-3xl w-full h-[500px] object-cover"
+        onerror="this.src='/assets/images/nexo_back.jpg'"
       />
 
       <div>
@@ -107,7 +144,7 @@ function renderEvento(container, evento) {
 }
 
 /**
- * 🔗 EVENT BINDINGS
+ * 🔗 ACTIONS
  */
 function bindActions(evento) {
 
@@ -132,9 +169,6 @@ function bindActions(evento) {
       cantidad: 1
     });
 
-    /**
-     * ⚠️ ROUTING CENTRALIZADO (FIX FUTURO)
-     */
     window.location.href = "/pages/checkout.html";
   });
 }

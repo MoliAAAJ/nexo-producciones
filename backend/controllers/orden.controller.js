@@ -8,7 +8,7 @@ import { generarPDF } from "../utils/generarPDF.js";
 import { preferenceClient } from "../config/mp.js";
 
 /**
- * 🧾 CREAR ORDEN (BLINDADO)
+ * 🧾 CREAR ORDEN
  */
 export const crearOrden = async (req, res) => {
 
@@ -16,7 +16,13 @@ export const crearOrden = async (req, res) => {
 
     const { evento_id, items, cliente } = req.body;
 
+    console.log("📦 BODY:", req.body);
+
+    /**
+     * VALIDACIONES
+     */
     if (!evento_id || !items?.length) {
+
       return res.status(400).json({
         error: "Datos incompletos"
       });
@@ -25,55 +31,122 @@ export const crearOrden = async (req, res) => {
     const evento = await Evento.findById(evento_id);
 
     if (!evento) {
+
       return res.status(404).json({
         error: "Evento no encontrado"
       });
     }
 
     let total = 0;
+
     const itemsFinal = [];
 
+    /**
+     * 🎟️ ITEMS
+     */
     for (const item of items) {
 
-      const entrada = evento.entradas.find(
-        e => e.tipo === item.tipo
+      const cantidadNum =
+        Number(item.cantidad || 1);
+
+      const tipo =
+        String(item.tipo || "")
+          .trim()
+          .toLowerCase();
+
+      console.log("🎟 ITEM:", tipo);
+
+      console.log(
+        "🎫 ENTRADAS:",
+        evento.entradas.map(e => e.tipo)
       );
 
+      const entrada = evento.entradas.find(
+        e =>
+          e.tipo
+            .trim()
+            .toLowerCase() === tipo
+      );
+
+      /**
+       * ❌ ENTRADA INVÁLIDA
+       */
       if (!entrada) {
+
         return res.status(400).json({
           error: "Entrada inválida"
         });
       }
 
-      if (entrada.stock < item.cantidad) {
+      /**
+       * ❌ CANTIDAD INVÁLIDA
+       */
+      if (
+        Number.isNaN(cantidadNum) ||
+        cantidadNum <= 0
+      ) {
+
+        return res.status(400).json({
+          error: "Cantidad inválida"
+        });
+      }
+
+      /**
+       * ❌ STOCK
+       */
+      const stockDisponible =
+        Number(entrada.stock || 0);
+
+      console.log("📦 STOCK:", stockDisponible);
+
+      if (stockDisponible < cantidadNum) {
+
         return res.status(400).json({
           error: "Stock insuficiente"
         });
       }
 
-      total += entrada.precio * item.cantidad;
+      total += Number(entrada.precio) * cantidadNum;
 
       itemsFinal.push({
         tipo: entrada.tipo,
-        cantidad: item.cantidad,
-        precio_unitario: entrada.precio
+        cantidad: cantidadNum,
+        precio_unitario: Number(entrada.precio)
       });
 
-      entrada.stock -= item.cantidad;
+      entrada.stock =
+        stockDisponible - cantidadNum;
+
     }
 
+    /**
+     * 💾 SAVE EVENTO
+     */
     await evento.save();
 
+    /**
+     * 🧾 CREAR ORDEN
+     */
     const orden = await Orden.create({
+
       evento_id,
+
       cliente,
+
       items: itemsFinal,
+
       total,
+
       estado: "pendiente"
     });
 
+    console.log(
+      "🧾 ORDEN ID:",
+      orden._id.toString()
+    );
+
     /**
-     * 🚨 FIX CRÍTICO: URL ABSOLUTA SEGURA
+     * 🌐 URLS
      */
     const FRONT =
       process.env.FRONT_URL ||
@@ -83,48 +156,102 @@ export const crearOrden = async (req, res) => {
       process.env.BASE_URL ||
       "http://localhost:3000";
 
-    const preference = await preferenceClient.create({
-      body: {
-        items: [
-          {
-            title: `Entrada ${evento.nombre}`,
-            quantity: 1,
-            unit_price: total,
-            currency_id: "ARS"
-          }
-        ],
+    /**
+     * 💳 MERCADOPAGO
+     */
+    const preference =
+      await preferenceClient.create({
 
-        notification_url: `${BACK}/mp/webhook`,
+        body: {
 
-        back_urls: {
-          success: `${FRONT}/pages/success.html?orden_id=${orden._id}`,
-          failure: `${FRONT}/payments/fail.html`,
-          pending: `${FRONT}/payments/pending.html`
-        },
+          items: [
 
-        auto_return: "approved",
+            {
+              title:
+                `Entrada ${evento.nombre}`,
 
-        external_reference: String(orden._id)
-      }
-    });
+              quantity: 1,
 
+              unit_price: total,
+
+              currency_id: "ARS"
+            }
+
+          ],
+
+          notification_url:
+            `${BACK}/mp/webhook`,
+
+          back_urls: {
+
+            success:
+              `${FRONT}/pages/success.html?orden_id=${orden._id}`,
+
+            failure:
+              `${FRONT}/payments/fail.html`,
+
+            pending:
+              `${FRONT}/payments/pending.html`
+          },
+
+          auto_return: "approved",
+
+          external_reference:
+            orden._id.toString()
+        }
+      });
+
+    /**
+     * 🔥 INIT POINT
+     */
     const init_point =
+
       preference.init_point ||
+
+      preference.response?.init_point ||
+
       preference.body?.init_point;
 
+    console.log(
+      "🔥 INIT POINT:",
+      init_point
+    );
+
+    /**
+     * ❌ MP FAIL
+     */
+    if (!init_point) {
+
+      return res.status(500).json({
+        error:
+          "MercadoPago no devolvió init_point"
+      });
+    }
+
+    /**
+     * ✅ SUCCESS
+     */
     return res.json({
+
       ok: true,
+
       orden_id: orden._id,
+
       total,
+
       init_point
     });
 
   } catch (error) {
 
-    console.error("❌ Error creando orden:", error);
+    console.error(
+      "❌ Error creando orden:",
+      error
+    );
 
     return res.status(500).json({
-      error: "Error al procesar compra"
+      error:
+        "Error al procesar compra"
     });
   }
 };
@@ -136,30 +263,38 @@ export const obtenerOrden = async (req, res) => {
 
   try {
 
-    const orden = await Orden.findById(req.params.id)
-      .populate("evento_id");
+    const orden =
+      await Orden.findById(req.params.id)
+        .populate("evento_id");
 
     if (!orden) {
+
       return res.status(404).json({
         error: "Orden no encontrada"
       });
     }
 
-    const tickets = await Ticket.find({
-      orden_id: orden._id
-    });
+    const tickets =
+      await Ticket.find({
+        orden_id: orden._id
+      });
 
     return res.json({
+
       ok: true,
+
       orden,
+
       tickets
     });
 
   } catch (error) {
+
     console.error(error);
 
     return res.status(500).json({
-      error: "Error obteniendo orden"
+      error:
+        "Error obteniendo orden"
     });
   }
 };
@@ -167,24 +302,34 @@ export const obtenerOrden = async (req, res) => {
 /**
  * 📄 PDF
  */
-export const descargarTicketPDF = async (req, res) => {
+export const descargarTicketPDF =
+async (req, res) => {
 
   try {
 
-    const ticket = await Ticket.findById(req.params.id);
+    const ticket =
+      await Ticket.findById(req.params.id);
 
     if (!ticket) {
+
       return res.status(404).json({
-        error: "Ticket no encontrado"
+        error:
+          "Ticket no encontrado"
       });
     }
 
-    const orden = await Orden.findById(ticket.orden_id)
-      .populate("evento_id");
+    const orden =
+      await Orden.findById(ticket.orden_id)
+        .populate("evento_id");
 
-    const pdfBuffer = await generarPDF(ticket, orden);
+    const pdfBuffer =
+      await generarPDF(ticket, orden);
 
-    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Type",
+      "application/pdf"
+    );
+
     res.setHeader(
       "Content-Disposition",
       `attachment; filename=ticket-${ticket._id}.pdf`
@@ -197,7 +342,8 @@ export const descargarTicketPDF = async (req, res) => {
     console.error(error);
 
     return res.status(500).json({
-      error: "Error generando PDF"
+      error:
+        "Error generando PDF"
     });
   }
 };

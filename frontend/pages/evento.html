@@ -22,12 +22,11 @@
 
 <body class="text-white min-h-screen flex flex-col">
 
-<!-- HEADER -->
 <header class="sticky top-0 z-50 bg-black/70 backdrop-blur border-b border-white/10">
 
   <div class="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
 
-    <img src="/assets/logo.png" class="h-24 w-auto"/>
+    <img src="/assets/images/branding/nexo_logo_transparente.png" class="h-24 w-auto"/>
 
     <button onclick="abrirFAQ()" class="bg-purple-600 hover:bg-purple-700 px-5 py-2 rounded-xl text-sm font-semibold">
       Ayuda
@@ -41,19 +40,16 @@
 
 </header>
 
-<!-- BODY -->
 <main class="flex-1 py-10 px-5">
 
   <div id="container" class="max-w-6xl mx-auto"></div>
 
 </main>
 
-<!-- FOOTER -->
 <footer class="border-t border-white/10 py-6 text-center text-sm text-gray-500">
   © 2026 NEXO Tickets
 </footer>
 
-<!-- MODAL -->
 <div id="faqModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 px-5">
 
   <div class="bg-gray-900 rounded-3xl border border-white/10 max-w-2xl w-full p-8 relative">
@@ -75,6 +71,20 @@
 const evento = JSON.parse(localStorage.getItem("evento"));
 const container = document.getElementById("container");
 
+/**
+ * 🔥 FIX CRÍTICO: normalizar imagen SIEMPRE
+ */
+function fixImage(path) {
+
+  if (!path) return "/assets/images/events/1.jpg";
+
+  if (path.startsWith("http")) return path;
+
+  if (path.startsWith("/assets")) return path;
+
+  return "/assets/images/events/" + path;
+}
+
 if (!evento) {
 
   container.innerHTML = `
@@ -94,7 +104,10 @@ if (!evento) {
   container.innerHTML = `
     <div class="grid lg:grid-cols-2 gap-10">
 
-      <img src="${evento.imagen}" class="w-full h-[500px] object-cover rounded-3xl"/>
+      <img 
+        src="${fixImage(evento.imagen)}" 
+        class="w-full h-[500px] object-cover rounded-3xl"
+      />
 
       <div>
 

@@ -1,5 +1,9 @@
 import path from "path";
 import PDFDocument from "pdfkit";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const generarPDF = (ticket, orden) => {
 
@@ -10,9 +14,12 @@ export const generarPDF = (ticket, orden) => {
       margin: 50
     });
 
-    // 🖼️ LOGO
-    const logoPath = path.resolve(
-      "assets/logo.png"
+    /**
+     * 🔥 LOGO
+     */
+    const logoPath = path.join(
+      __dirname,
+      "../../frontend/public/assets/images/branding/nexo_logo_transparente.png"
     );
 
     const buffers = [];
@@ -31,34 +38,52 @@ export const generarPDF = (ticket, orden) => {
 
     });
 
-    // 🔥 LOGO
+    /**
+     * 🎨 BACKGROUND
+     */
+    doc
+      .rect(0, 0, doc.page.width, doc.page.height)
+      .fill("#0f0f12");
 
+    doc.fillColor("white");
+
+    /**
+     * 🖼️ LOGO
+     */
     try {
 
-      doc.image(logoPath, {
-        fit: [140, 140],
-        align: "center"
-      });
+      doc.image(
+        logoPath,
+        (doc.page.width - 80) / 2,
+        20,
+        {
+          fit: [80, 80],
+          align: "center"
+        }
+      );
 
     } catch (error) {
 
-      console.log(
-        "⚠️ Logo no encontrado"
-      );
+      console.log("⚠️ Logo no encontrado");
+      console.log(error);
 
     }
 
-    doc.moveDown(1);
+    /**
+     * 🔥 POSICIÓN MANUAL
+     */
+    doc.y = 115;
 
-    // 🎵 EVENTO
-
+    /**
+     * 🎵 EVENTO
+     */
     const nombreEvento =
       orden.evento_id?.nombre ||
       "EVENTO";
 
     doc
-      .fontSize(22)
-      .fillColor("#111")
+      .fontSize(24)
+      .fillColor("#a855f7")
       .text(
         nombreEvento,
         {
@@ -66,30 +91,33 @@ export const generarPDF = (ticket, orden) => {
         }
       );
 
-    doc.moveDown(1);
+    doc.moveDown(1.5);
 
-    // 👤 CLIENTE
-
+    /**
+     * 👤 CLIENTE
+     */
     doc
       .fontSize(14)
-      .fillColor("#000");
+      .fillColor("white");
 
     doc.text(
       `Cliente: ${orden.cliente.nombre} ${orden.cliente.apellido}`
     );
 
-    doc.moveDown();
+    doc.moveDown(0.7);
 
-    // 🎟️ TIPO
-
+    /**
+     * 🎟️ TIPO
+     */
     doc.text(
       `Tipo entrada: ${ticket.tipo}`
     );
 
-    doc.moveDown();
+    doc.moveDown(0.7);
 
-    // 📍 LUGAR
-
+    /**
+     * 📍 LUGAR
+     */
     doc.text(
       `Lugar: ${
         orden.evento_id?.lugar ||
@@ -97,10 +125,11 @@ export const generarPDF = (ticket, orden) => {
       }`
     );
 
-    doc.moveDown();
+    doc.moveDown(0.7);
 
-    // 📅 FECHA EVENTO
-
+    /**
+     * 📅 FECHA
+     */
     const fechaEvento =
       orden.evento_id?.fecha
         ? new Date(
@@ -112,10 +141,11 @@ export const generarPDF = (ticket, orden) => {
       `Fecha: ${fechaEvento}`
     );
 
-    doc.moveDown();
+    doc.moveDown(0.7);
 
-    // 🕒 HORA EVENTO
-
+    /**
+     * 🕒 HORA
+     */
     doc.text(
       `Hora: ${
         orden.evento_id?.hora ||
@@ -123,31 +153,30 @@ export const generarPDF = (ticket, orden) => {
       }`
     );
 
-    doc.moveDown(1);
+    doc.moveDown(1.5);
 
-    // 🎟️ TEXTO QR
-
+    /**
+     * 🎟️ QR TITLE
+     */
     doc
       .fontSize(16)
-      .fillColor("#111")
+      .fillColor("#22c55e")
       .text(
-        "Escaneá en puerta",
+        "Escaneá este QR en puerta",
         {
           align: "center"
         }
       );
 
-    doc.moveDown();
+    doc.moveDown(1);
 
-    // 🔥 QR CENTRADO
-
-    const qrSize = 170;
-
-    const pageWidth =
-      doc.page.width;
+    /**
+     * 🔥 QR
+     */
+    const qrSize = 150;
 
     const x =
-      (pageWidth - qrSize) / 2;
+      (doc.page.width - qrSize) / 2;
 
     doc.image(
 
@@ -167,13 +196,17 @@ export const generarPDF = (ticket, orden) => {
 
     );
 
-    doc.moveDown(12);
+    /**
+     * 🔥 BAJAR MANUALMENTE
+     */
+    doc.y += 170;
 
-    // 🔑 CÓDIGO
-
+    /**
+     * 🔑 CODE
+     */
     doc
       .fontSize(16)
-      .fillColor("#7c3aed")
+      .fillColor("#a855f7")
       .text(
 
         `Código: NEXO-${ticket._id
@@ -188,11 +221,12 @@ export const generarPDF = (ticket, orden) => {
 
     doc.moveDown(1);
 
-    // 🦶 FOOTER
-
+    /**
+     * 🦶 FOOTER
+     */
     doc
       .fontSize(11)
-      .fillColor("gray")
+      .fillColor("#9ca3af")
       .text(
         "Presentar este ticket al ingresar al evento",
         {
@@ -200,11 +234,11 @@ export const generarPDF = (ticket, orden) => {
         }
       );
 
-    doc.moveDown();
+    doc.moveDown(0.5);
 
     doc
       .fontSize(10)
-      .fillColor("#999")
+      .fillColor("#6b7280")
       .text(
         "NEXO Tickets • Powered by MercadoPago",
         {

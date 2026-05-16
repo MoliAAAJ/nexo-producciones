@@ -2,7 +2,7 @@
 
 /**
  * 🏠 INDEX PAGE LOGIC
- * Solo lógica de la home
+ * Home con blindaje de imágenes y datos
  */
 
 import { formatDate, money } from "../utils.js";
@@ -48,6 +48,35 @@ async function cargarEventos() {
 }
 
 /**
+ * 🧠 NORMALIZAR IMAGEN (BLINDADO)
+ */
+function getImagen(ev) {
+  const img = ev.imagen;
+
+  if (!img) {
+    return "/assets/images/nexo_back.jpg";
+  }
+
+  // ya viene bien
+  if (img.startsWith("/")) {
+    return img;
+  }
+
+  // si viene tipo "images/1.jpg"
+  if (img.startsWith("images/")) {
+    return `/assets/${img}`;
+  }
+
+  // si viene "public/..." o basura
+  if (img.includes("public")) {
+    return img.replace("public", "");
+  }
+
+  // fallback seguro
+  return `/assets/images/${img}`;
+}
+
+/**
  * 🎨 RENDER EVENTOS
  */
 function render(lista) {
@@ -74,13 +103,18 @@ function render(lista) {
     };
 
     const precio = ev.entradas?.[0]?.precio || 0;
+    const imagen = getImagen(ev);
 
     card.innerHTML = `
-      <img src="${ev.imagen}" class="h-48 w-full object-cover"/>
+      <img
+        src="${imagen}"
+        class="h-48 w-full object-cover"
+        onerror="this.src='/assets/images/nexo_back.jpg'"
+      />
 
       <div class="p-4">
         <h3 class="text-xl font-bold text-purple-300">
-          ${ev.nombre}
+          ${ev.nombre || "Evento sin nombre"}
         </h3>
 
         <p class="text-gray-400 text-sm mt-1">

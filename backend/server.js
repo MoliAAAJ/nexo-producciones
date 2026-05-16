@@ -11,9 +11,6 @@ import { fileURLToPath } from "url";
 import { connectDB } from "./config/db.js";
 import Evento from "./models/Evento.js";
 
-/**
- * ROUTES
- */
 import ordenRoutes from "./routes/orden.routes.js";
 import mpRoutes from "./routes/mp.routes.js";
 import ticketRoutes from "./routes/ticket.routes.js";
@@ -22,49 +19,39 @@ import reportesRoutes from "./routes/reportes.routes.js";
 
 const app = express();
 
-/**
- * PATH FIX
- */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * CORS
+ * 🌐 CORS
  */
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
-      process.env.FRONT_URL,
-    ].filter(Boolean),
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    process.env.FRONT_URL,
+  ].filter(Boolean),
+}));
 
-app.options("*", cors());
-
-/**
- * MIDDLEWARES
- */
 app.use(express.json());
 
 /**
- * STATIC FRONTEND
+ * 🧠 STATIC FRONTEND (BASE)
  */
 app.use(express.static(path.join(__dirname, "../frontend")));
 
 /**
- * ASSETS
+ * 🖼️ ASSETS (OBLIGATORIO PARA IMÁGENES)
  */
 app.use(
   "/assets",
-  express.static(path.join(__dirname, "../frontend/public/assets"))
+  express.static(
+    path.join(__dirname, "../frontend/public/assets")
+  )
 );
 
 /**
- * API ROUTES
+ * 🔌 API ROUTES
  */
 app.use("/api/orden", ordenRoutes);
 app.use("/mp", mpRoutes);
@@ -73,12 +60,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/reportes", reportesRoutes);
 
 /**
- * DB
- */
-connectDB();
-
-/**
- * EVENTOS API
+ * 📡 EVENTOS API
  */
 app.get("/eventos", async (req, res) => {
   try {
@@ -90,25 +72,21 @@ app.get("/eventos", async (req, res) => {
 });
 
 /**
- * ROOT FIX (ESTO ES CLAVE)
+ * 🚨 SPA FALLBACK (ÚLTIMO SIEMPRE)
  */
-app.get("/", (req, res) => {
+app.get("*", (req, res) => {
   res.sendFile(
     path.join(__dirname, "../frontend/pages/index.html")
   );
 });
 
 /**
- * INDEX.HTML FIX
+ * 🔥 DB
  */
-app.get("/index.html", (req, res) => {
-  res.sendFile(
-    path.join(__dirname, "../frontend/pages/index.html")
-  );
-});
+connectDB();
 
 /**
- * SERVER
+ * 🚀 SERVER
  */
 const PORT = process.env.PORT || 3000;
 

@@ -2,7 +2,7 @@
 
 import { Storage } from "../core/storage.js";
 import { crearOrden } from "../core/api.js";
-import { $ , money } from "../core/utils.js";
+import { $, money } from "../core/utils.js";
 
 /**
  * 🎯 INIT CHECKOUT PAGE
@@ -24,23 +24,21 @@ export function initCheckoutPage() {
   const precio = Number(entrada?.precio || 0);
 
   /**
-   * 🎨 INIT RENDER
+   * 🧠 IMAGE SAFE
    */
-  renderEvento(container, evento);
+  const imagen = getImagen(evento);
 
   /**
-   * 💰 FIRST RENDER
+   * 🎨 RENDER
    */
+  renderEvento(container, evento, imagen);
+
   update();
-
-  /**
-   * 🔗 BIND UI EVENTS
-   */
   bindEvents();
 
   /**
    * =========================
-   * CORE FUNCTIONS
+   * CORE
    * =========================
    */
 
@@ -108,7 +106,7 @@ export function initCheckoutPage() {
         }
       });
 
-      if (!data || !data.init_point) {
+      if (!data?.init_point) {
         throw new Error("Respuesta inválida");
       }
 
@@ -127,7 +125,7 @@ export function initCheckoutPage() {
 
   /**
    * =========================
-   * BINDING LIMPIO (NO onclick HTML)
+   * EVENTS
    * =========================
    */
   function bindEvents() {
@@ -146,12 +144,13 @@ export function initCheckoutPage() {
    * RENDER
    * =========================
    */
-  function renderEvento(container, evento) {
+  function renderEvento(container, evento, imagen) {
 
     container.innerHTML = `
       <img
-        src="${evento.imagen || ""}"
+        src="${imagen}"
         class="rounded-3xl w-full h-[450px] object-cover"
+        onerror="this.src='/assets/images/nexo_back.jpg'"
       />
 
       <h1 class="text-4xl font-bold mt-6">
@@ -170,9 +169,10 @@ export function initCheckoutPage() {
 
   /**
    * =========================
-   * SAFE HELPERS
+   * HELPERS
    * =========================
    */
+
   function safeGet(key) {
     try {
       return Storage.get(key);
@@ -189,5 +189,38 @@ export function initCheckoutPage() {
 
   function getValue(id) {
     return $(id)?.value?.trim() || "";
+  }
+
+  function getImagen(evento) {
+
+    const img = evento?.imagen;
+
+    const fallback = "/assets/images/events/nexo_back.jpg";
+
+    if (!img || typeof img !== "string") {
+      return fallback;
+    }
+
+    // 🔥 SI YA ES URL ABSOLUTA
+    if (img.startsWith("http")) return img;
+
+    // 🔥 SI YA VIENE BIEN FORMATEADA
+    if (img.startsWith("/assets/")) return img;
+
+    // 🔥 SI SOLO VIENE "1.jpg" o "nexo_back.jpg"
+    if (!img.includes("/")) {
+      return `/assets/images/events/${img}`;
+    }
+
+    // 🔥 SI VIENE MAL ARMADA /images/... o public/images/...
+    const cleaned = img
+      .replace("public/", "")
+      .replace("/public", "")
+      .replace("images/", "assets/images/")
+      .replace("//", "/");
+
+    return cleaned.startsWith("/")
+      ? cleaned
+      : `/${cleaned}`;
   }
 }

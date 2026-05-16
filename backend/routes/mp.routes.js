@@ -1,14 +1,18 @@
 import express from "express";
 
-import { MercadoPagoConfig, Payment } from "mercadopago";
+import {
+  MercadoPagoConfig,
+  Payment
+} from "mercadopago";
 
 import Orden from "../models/Orden.js";
 import Ticket from "../models/Ticket.js";
 
 import { generarQR } from "../utils/generarQR.js";
 
-import { enviarTicketsEmail }
-from "../utils/enviarTicketsEmail.js";
+import {
+  enviarTicketsEmail
+} from "../utils/enviarTicketsEmail.js";
 
 const router = express.Router();
 
@@ -18,40 +22,63 @@ const client = new MercadoPagoConfig({
 
 const paymentClient = new Payment(client);
 
+/**
+ * 🔥 WEBHOOK MP
+ */
 router.post("/webhook", async (req, res) => {
 
   try {
 
     console.log("🔥 WEBHOOK RECIBIDO");
+    console.log(req.body);
 
-    const paymentId = req.body.data?.id;
+    /**
+     * 🔥 FIX REAL
+     */
+    const paymentId =
+      req.body?.data?.id ||
+      req.query["data.id"];
 
     if (!paymentId) {
 
-      return res.sendStatus(200);
+      console.log("❌ paymentId missing");
 
+      return res.sendStatus(200);
     }
 
-    // 🔥 CONSULTAR PAGO REAL
-
-    const payment = await paymentClient.get({
-      id: paymentId
-    });
+    /**
+     * 💳 PAYMENT REAL
+     */
+    const payment =
+      await paymentClient.get({
+        id: paymentId
+      });
 
     console.log("💳 PAYMENT:", payment);
 
-    const orderId = payment.external_reference;
+    /**
+     * 🔥 FIX SDK RESPONSE
+     */
+    const paymentData =
+      payment.body || payment;
+
+    const orderId =
+      paymentData.external_reference;
 
     if (!orderId) {
 
-      console.log("❌ external_reference no encontrada");
+      console.log(
+        "❌ external_reference missing"
+      );
 
       return res.sendStatus(200);
-
     }
 
-    const orden = await Orden
-      .findById(orderId)
+    /**
+     * 📦 ORDEN
+     */
+    const orden =
+      await Orden.findById(orderId)
       .populate("evento_id");
 
     if (!orden) {
@@ -59,37 +86,38 @@ router.post("/webhook", async (req, res) => {
       console.log("❌ Orden no encontrada");
 
       return res.sendStatus(200);
-
     }
 
-    // evitar duplicados
-
+    /**
+     * 🚫 DUPLICADOS
+     */
     if (orden.estado === "pagado") {
 
       console.log("⚠ Orden ya pagada");
 
       return res.sendStatus(200);
-
     }
 
-    // validar estado MP
-
-    if (payment.status !== "approved") {
+    /**
+     * ❌ NO APROBADO
+     */
+    if (paymentData.status !== "approved") {
 
       console.log("⚠ Pago no aprobado");
 
       return res.sendStatus(200);
-
     }
 
-    // ✅ MARCAR PAGADA
-
+    /**
+     * ✅ PAGADA
+     */
     orden.estado = "pagado";
 
     await orden.save();
 
-    // 🎟️ GENERAR TICKETS
-
+    /**
+     * 🎟️ GENERAR TICKETS
+     */
     const ticketsGenerados = [];
 
     for (const item of orden.items) {
@@ -116,15 +144,16 @@ router.post("/webhook", async (req, res) => {
         await ticket.save();
 
         ticketsGenerados.push(ticket);
-
       }
-
     }
 
-    console.log("🎟️ Tickets generados correctamente");
+    console.log(
+      "🎟️ Tickets generados correctamente"
+    );
 
-    // ✅ ENVIAR EMAIL
-
+    /**
+     * 📧 EMAIL
+     */
     enviarTicketsEmail({
 
       cliente: orden.cliente,
@@ -135,10 +164,10 @@ router.post("/webhook", async (req, res) => {
 
     }).catch(error => {
 
-        console.error(
-          "❌ Error mail:",
+      console.error(
+        "❌ Error mail:",
         error
-        );
+      );
 
     });
 
@@ -148,12 +177,13 @@ router.post("/webhook", async (req, res) => {
 
   } catch (error) {
 
-    console.error("❌ ERROR WEBHOOK:", error);
+    console.error(
+      "❌ ERROR WEBHOOK:",
+      error
+    );
 
     return res.sendStatus(500);
-
   }
-
 });
 
 export default router;
