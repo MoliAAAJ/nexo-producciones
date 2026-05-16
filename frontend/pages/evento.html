@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Evento - NEXO Tickets</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #0f0f12; }
+  </style>
+
+</head>
+
+<body class="text-white min-h-screen flex flex-col">
+
+<!-- HEADER -->
+<header class="sticky top-0 z-50 bg-black/70 backdrop-blur border-b border-white/10">
+
+  <div class="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
+
+    <img src="/assets/logo.png" class="h-24 w-auto"/>
+
+    <button onclick="abrirFAQ()" class="bg-purple-600 hover:bg-purple-700 px-5 py-2 rounded-xl text-sm font-semibold">
+      Ayuda
+    </button>
+
+    <h1 class="text-xl font-extrabold text-purple-400">
+      NEXO <span class="text-white">Tickets</span>
+    </h1>
+
+  </div>
+
+</header>
+
+<!-- BODY -->
+<main class="flex-1 py-10 px-5">
+
+  <div id="container" class="max-w-6xl mx-auto"></div>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="border-t border-white/10 py-6 text-center text-sm text-gray-500">
+  © 2026 NEXO Tickets
+</footer>
+
+<!-- MODAL -->
+<div id="faqModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 px-5">
+
+  <div class="bg-gray-900 rounded-3xl border border-white/10 max-w-2xl w-full p-8 relative">
+
+    <button onclick="cerrarFAQ()" class="absolute top-4 right-4 text-2xl text-gray-400">×</button>
+
+    <h2 class="text-3xl font-bold text-purple-400 mb-6">FAQ</h2>
+
+    <p class="text-gray-300">
+      Información del evento y compra de entradas.
+    </p>
+
+  </div>
+
+</div>
+
+<script>
+
+const evento = JSON.parse(localStorage.getItem("evento"));
+const container = document.getElementById("container");
+
+if (!evento) {
+
+  container.innerHTML = `
+    <div class="text-center text-red-400 text-2xl">
+      Evento no encontrado
+    </div>
+  `;
+
+} else {
+
+  const fecha = new Date(evento.fecha).toLocaleDateString("es-AR");
+
+  const entrada = evento.entradas?.[0];
+
+  const precio = entrada?.precio || 0;
+
+  container.innerHTML = `
+    <div class="grid lg:grid-cols-2 gap-10">
+
+      <img src="${evento.imagen}" class="w-full h-[500px] object-cover rounded-3xl"/>
+
+      <div>
+
+        <span class="bg-purple-600 px-4 py-2 rounded-full text-sm">
+          ${evento.categoria || "Evento"}
+        </span>
+
+        <h1 class="text-5xl font-extrabold mt-5">
+          ${evento.nombre}
+        </h1>
+
+        <p class="mt-6 text-gray-300">
+          ${evento.descripcion || "Próximamente más información sobre este evento."}
+        </p>
+
+        <div class="mt-6 text-gray-400 space-y-2">
+          <div>📅 ${fecha}</div>
+          <div>🕒 ${evento.hora || "Horario a confirmar"}</div>
+          <div>📍 ${evento.lugar || "Lugar a confirmar"}</div>
+        </div>
+
+        <h2 class="text-5xl text-green-400 mt-8">
+          $${precio}
+        </h2>
+
+        <button
+          onclick="comprar()"
+          class="mt-10 w-full bg-purple-600 hover:bg-purple-700 transition py-5 rounded-2xl font-bold text-xl"
+        >
+          Quiero asistir
+        </button>
+
+      </div>
+
+    </div>
+  `;
+}
+
+function comprar() {
+
+  const entrada = evento?.entradas?.[0];
+
+  localStorage.setItem("orden_temp", JSON.stringify({
+    eventoId: evento._id,
+    eventoNombre: evento.nombre,
+    tipo: "General",
+    precio: entrada?.precio || 0,
+    cantidad: 1
+  }));
+
+  window.location.href = "/pages/checkout.html";
+}
+
+function abrirFAQ(){
+  const modal = document.getElementById("faqModal");
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+}
+
+function cerrarFAQ(){
+  const modal = document.getElementById("faqModal");
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+}
+
+</script>
+
+</body>
+</html>

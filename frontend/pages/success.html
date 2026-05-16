@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Compra confirmada - NEXO Tickets</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #0f0f12; }
+  </style>
+
+</head>
+
+<body class="text-white min-h-screen flex flex-col">
+
+<header class="sticky top-0 z-50 bg-black/70 backdrop-blur border-b border-white/10">
+
+  <div class="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
+
+    <img src="/assets/logo.png" class="h-24 w-auto"/>
+
+    <button onclick="window.location.href='/'"
+      class="bg-purple-600 hover:bg-purple-700 transition px-5 py-2 rounded-xl font-semibold text-sm">
+      Inicio
+    </button>
+
+    <h1 class="text-xl font-extrabold tracking-wide text-purple-400">
+      NEXO <span class="text-white">Tickets</span>
+    </h1>
+
+  </div>
+
+</header>
+
+<main class="flex-1 px-5 py-16">
+
+  <div class="max-w-5xl mx-auto">
+
+    <div class="bg-gray-900 border border-white/10 rounded-3xl p-10">
+
+      <div class="text-center">
+
+        <div class="text-7xl mb-6">🎉</div>
+
+        <h1 class="text-5xl font-extrabold text-green-400">
+          ¡Compra confirmada!
+        </h1>
+
+        <p class="text-gray-400 text-xl mt-6">
+          Tus entradas están siendo generadas...
+        </p>
+
+      </div>
+
+      <!-- STATUS -->
+      <div class="mt-10 text-center text-yellow-400" id="estadoCarga">
+        Cargando orden...
+      </div>
+
+      <!-- EVENTO -->
+      <div id="eventoBox" class="hidden mt-10 bg-black/30 border border-white/10 rounded-3xl overflow-hidden">
+
+        <img id="eventoImagen" class="w-full h-72 object-cover"/>
+
+        <div class="p-8">
+
+          <h2 id="eventoNombre" class="text-4xl font-extrabold"></h2>
+
+          <div class="mt-6 grid md:grid-cols-3 gap-4 text-gray-300">
+
+            <div id="eventoFecha"></div>
+            <div id="eventoHora"></div>
+            <div id="eventoLugar"></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- TICKETS -->
+      <div class="mt-12">
+        <h2 class="text-3xl font-extrabold mb-8">Tus entradas</h2>
+        <div id="ticketsContainer" class="grid md:grid-cols-2 gap-6"></div>
+      </div>
+
+      <div class="mt-12">
+        <button onclick="window.location.href='/'"
+          class="w-full bg-gray-800 hover:bg-gray-700 transition py-5 rounded-2xl font-bold text-lg">
+          Volver al inicio
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+
+const API_URL = window.location.origin;
+
+async function cargarOrden() {
+
+  try {
+
+    const params = new URLSearchParams(window.location.search);
+    const ordenId = params.get("orden_id");
+
+    if (!ordenId) {
+      document.getElementById("estadoCarga").innerText = "Orden inválida";
+      return;
+    }
+
+    let data = null;
+    let intentos = 0;
+
+    while (intentos < 25) {
+
+      document.getElementById("estadoCarga").innerText =
+        `Generando tickets... (${intentos + 1}/25)`;
+
+      const res = await fetch(`${API_URL}/api/orden/${ordenId}`);
+
+      if (res.ok) {
+        data = await res.json();
+
+        if (data?.tickets?.length > 0) break;
+      }
+
+      await new Promise(r => setTimeout(r, 2000));
+      intentos++;
+    }
+
+    if (!data?.tickets?.length) {
+      document.getElementById("estadoCarga").innerText =
+        "Los tickets aún no están listos. Recargá en unos segundos.";
+      return;
+    }
+
+    document.getElementById("estadoCarga").innerHTML =
+      `<span class="text-green-400">✅ Tickets generados</span>`;
+
+    const orden = data.orden || {};
+
+    // EVENTO SAFE
+    const ev = orden.evento_id || {};
+
+    if (orden.evento_id) {
+
+      document.getElementById("eventoBox").classList.remove("hidden");
+
+      document.getElementById("eventoNombre").innerText =
+        ev.nombre || "Evento";
+
+      document.getElementById("eventoImagen").src =
+        ev.imagen || "";
+
+      const fecha = ev.fecha
+        ? new Date(ev.fecha).toLocaleDateString("es-AR")
+        : "Fecha a confirmar";
+
+      document.getElementById("eventoFecha").innerText = `📅 ${fecha}`;
+      document.getElementById("eventoHora").innerText = `🕒 ${ev.hora || "-"}`;
+      document.getElementById("eventoLugar").innerText = `📍 ${ev.lugar || "-"}`;
+    }
+
+    // TICKETS
+    const cont = document.getElementById("ticketsContainer");
+    cont.innerHTML = "";
+
+    data.tickets.forEach(t => {
+
+      cont.innerHTML += `
+        <div class="bg-black/30 border border-white/10 rounded-3xl p-6">
+
+          <div class="flex justify-between">
+            <div class="text-purple-400 font-bold text-xl">${t.tipo}</div>
+            <div class="text-green-400 text-sm">Confirmado</div>
+          </div>
+
+          <div class="mt-6">
+            ${t.qr_code ? `<img src="${t.qr_code}" class="w-52 h-52 mx-auto bg-white p-2 rounded-2xl"/>` : ""}
+          </div>
+
+          <button onclick="descargarPDF('${t._id}')"
+            class="mt-6 w-full bg-purple-600 hover:bg-purple-700 py-4 rounded-2xl font-bold">
+            Descargar PDF
+          </button>
+
+        </div>
+      `;
+
+    });
+
+  } catch (e) {
+    console.error(e);
+
+    document.body.innerHTML = `
+      <div class="min-h-screen flex items-center justify-center text-white">
+        <h1 class="text-red-500 text-3xl">Error cargando tickets</h1>
+      </div>
+    `;
+  }
+}
+
+function descargarPDF(id) {
+  window.open(`${API_URL}/api/ticket/${id}/pdf`, "_blank");
+}
+
+cargarOrden();
+
+</script>
+
+</body>
+</html>

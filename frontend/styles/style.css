@@ -1,0 +1,128 @@
+/* =========================
+   NEXO Producciones Styles
+   Base layer sobre Tailwind
+   ========================= */
+
+/* =========================
+   RESET BASE
+   ========================= */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #0f0f12;
+  color: white;
+  font-family: "Inter", sans-serif;
+}
+
+/* =========================
+   VARIABLES (design system)
+   ========================= */
+
+:root {
+  --primary: #7c3aed;
+  --primary-hover: #6d28d9;
+  --bg: #0f0f12;
+  --card: #111827;
+  --border: rgba(255, 255, 255, 0.08);
+  --text-muted: #9ca3af;
+  --success: #22c55e;
+  --error: #ef4444;
+  --warning: #f59e0b;
+}
+
+/* =========================
+   COMPONENTES BASE
+   ========================= */
+
+/* Botón primario */
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 14px;
+  font-weight: 600;
+  transition: 0.2s;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+/* Botón secundario */
+.btn-secondary {
+  background: #1f2937;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 14px;
+  font-weight: 600;
+  transition: 0.2s;
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background: #374151;
+}
+
+/* Inputs */
+.input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--primary);
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+
+/* Estados */
+.text-success {
+  color: var(--success);
+}
+
+.text-error {
+  color: var(--error);
+}
+
+.text-warning {
+  color: var(--warning);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* Hover efecto universal cards */
+.card-hover {
+  transition: transform 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: scale(1.02);
+}
+
+/* =========================
+   UTILIDADES
+   ========================= */
+
+.hidden {
+  display: none !important;
+}

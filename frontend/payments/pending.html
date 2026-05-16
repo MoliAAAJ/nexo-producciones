@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Pago pendiente - NEXO Tickets</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      background: #0f0f12;
+      color: white;
+      font-family: Arial;
+    }
+  </style>
+
+</head>
+
+<body class="min-h-screen flex items-center justify-center px-5">
+
+  <div class="max-w-md w-full text-center">
+
+    <!-- ICON -->
+    <div class="text-7xl mb-6">
+      ⏳
+    </div>
+
+    <!-- TITLE -->
+    <h1 class="text-4xl font-extrabold text-yellow-400">
+      Pago pendiente
+    </h1>
+
+    <!-- TEXT -->
+    <p class="text-gray-400 mt-6 text-lg leading-relaxed">
+
+      Tu pago está siendo procesado por el proveedor.
+      Esto puede tardar unos minutos.
+
+    </p>
+
+    <!-- STATUS BOX -->
+    <div class="mt-8 bg-gray-900 border border-white/10 rounded-2xl p-6 text-left">
+
+      <p class="text-sm text-gray-500">
+        Estado actual:
+      </p>
+
+      <p class="text-yellow-400 font-bold text-lg mt-2">
+        En validación
+      </p>
+
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="mt-10 flex flex-col gap-4">
+
+      <button
+        onclick="location.reload()"
+        class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 rounded-2xl transition"
+      >
+        Reintentar estado
+      </button>
+
+      <button
+        onclick="window.location.href='/'"
+        class="bg-gray-800 hover:bg-gray-700 py-4 rounded-2xl font-bold transition"
+      >
+        Volver al inicio
+      </button>
+
+    </div>
+
+  </div>
+
+</body>
+</html>

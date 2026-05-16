@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Compra - NEXO Tickets</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #0f0f12; }
+    input { outline: none; }
+  </style>
+
+</head>
+
+<body class="text-white min-h-screen flex flex-col">
+
+<header class="sticky top-0 z-50 bg-black/70 backdrop-blur border-b border-white/10">
+  <div class="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
+
+    <img src="/assets/logo.png" class="h-24 w-auto"/>
+
+    <h1 class="text-xl font-extrabold text-purple-400">
+      NEXO <span class="text-white">Tickets</span>
+    </h1>
+
+  </div>
+</header>
+
+<main class="flex-1 py-10 px-5">
+
+  <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10">
+
+    <div id="eventoInfo"></div>
+
+    <div class="bg-gray-900 border border-white/10 rounded-3xl p-8">
+
+      <h2 class="text-3xl font-extrabold mb-8">Finalizar compra</h2>
+
+      <div class="space-y-5">
+
+        <input id="nombreInput" placeholder="Nombre" class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4"/>
+        <input id="apellidoInput" placeholder="Apellido" class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4"/>
+        <input id="dniInput" placeholder="DNI" class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4"/>
+        <input id="emailInput" placeholder="Email" class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4"/>
+
+        <input id="codigo" placeholder="Código de descuento" class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4"/>
+
+      </div>
+
+      <div class="mt-8">
+        <p class="text-gray-400 mb-4">Cantidad de entradas</p>
+
+        <div class="flex items-center gap-5">
+          <button onclick="restar()" class="w-12 h-12 bg-gray-800 rounded-xl">-</button>
+          <span id="cantidad" class="text-3xl font-bold">1</span>
+          <button onclick="sumar()" class="w-12 h-12 bg-gray-800 rounded-xl">+</button>
+        </div>
+      </div>
+
+      <div class="mt-10 border-t border-white/10 pt-6">
+
+        <div class="flex justify-between text-gray-300">
+          <span>Subtotal</span>
+          <span id="subtotal">$0</span>
+        </div>
+
+        <div class="flex justify-between mt-5">
+          <span class="text-xl font-bold">Total</span>
+          <span id="total" class="text-4xl font-extrabold text-green-400">$0</span>
+        </div>
+
+      </div>
+
+      <div class="mt-8 flex items-start gap-3">
+        <input id="terms" type="checkbox"/>
+        <label class="text-sm text-gray-400">
+          Acepto términos y condiciones
+        </label>
+      </div>
+
+      <button id="btnComprar"
+        onclick="continuarPago()"
+        class="mt-8 w-full bg-purple-600 hover:bg-purple-700 py-5 rounded-2xl text-xl font-bold">
+        Continuar al pago
+      </button>
+
+    </div>
+
+  </div>
+
+</main>
+
+<footer class="border-t border-white/10 py-6 text-center text-sm text-gray-500">
+  © 2026 NEXO Tickets
+</footer>
+
+<script>
+
+const API_URL = window.location.origin;
+
+const orden = JSON.parse(localStorage.getItem("orden_temp"));
+const evento = JSON.parse(localStorage.getItem("evento"));
+
+if (!orden || !evento) {
+  document.body.innerHTML = `<div class="p-10 text-center text-red-400 text-2xl">Error cargando compra</div>`;
+}
+
+let cantidad = 1;
+let descuento = 0;
+let precio = orden?.precio || 0;
+
+function getStock() {
+  return evento?.entradas?.reduce((a,e)=>a+(e.stock||0),0) || 0;
+}
+
+function renderEvento() {
+
+  const fecha = new Date(evento.fecha).toLocaleDateString("es-AR");
+
+  document.getElementById("eventoInfo").innerHTML = `
+    <div>
+      <img src="${evento.imagen}" class="w-full h-[450px] object-cover rounded-3xl"/>
+
+      <div class="mt-8">
+        <h1 class="text-5xl font-extrabold">${evento.nombre}</h1>
+
+        <div class="mt-4 text-gray-300 space-y-2">
+          <div>📅 ${fecha}</div>
+          <div>📍 ${evento.lugar}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function actualizarTotal() {
+
+  let total = precio * cantidad;
+
+  const code = document.getElementById("codigo").value;
+
+  if (code === "NEXO10") {
+    descuento = total * 0.10;
+  } else {
+    descuento = 0;
+  }
+
+  const final = total - descuento;
+
+  document.getElementById("cantidad").innerText = cantidad;
+  document.getElementById("subtotal").innerText = `$${total}`;
+  document.getElementById("total").innerText = `$${final}`;
+}
+
+document.getElementById("codigo").addEventListener("input", actualizarTotal);
+
+function sumar() {
+  if (cantidad < getStock()) {
+    cantidad++;
+    actualizarTotal();
+  }
+}
+
+function restar() {
+  if (cantidad > 1) {
+    cantidad--;
+    actualizarTotal();
+  }
+}
+
+async function continuarPago() {
+
+  const nombre = document.getElementById("nombreInput").value;
+  const apellido = document.getElementById("apellidoInput").value;
+  const dni = document.getElementById("dniInput").value;
+  const email = document.getElementById("emailInput").value;
+  const terms = document.getElementById("terms").checked;
+
+  if (!nombre || !apellido || !dni || !email) return alert("Completa todo");
+  if (!terms) return alert("Acepta términos");
+
+  const btn = document.getElementById("btnComprar");
+  btn.disabled = true;
+  btn.innerText = "Procesando...";
+
+  try {
+
+    const res = await fetch(`${API_URL}/api/orden`, {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify({
+        evento_id: evento._id,
+        items: [{ tipo: "General", cantidad }],
+        cliente: { nombre, apellido, dni, email }
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) throw new Error();
+
+    window.location.href = data.init_point;
+
+  } catch (e) {
+    alert("Error procesando compra");
+    btn.disabled = false;
+    btn.innerText = "Continuar al pago";
+  }
+}
+
+renderEvento();
+actualizarTotal();
+
+</script>
+
+</body>
+</html>
