@@ -24,24 +24,9 @@ const ordenSchema = new mongoose.Schema(
     },
 
     cliente: {
-      nombre: {
-        type: String,
-        required: true,
-        trim: true,
-        minlength: 2
-      },
-      apellido: {
-        type: String,
-        required: true,
-        trim: true,
-        minlength: 2
-      },
-      dni: {
-        type: String,
-        required: true,
-        trim: true,
-        minlength: 6
-      },
+      nombre: { type: String, required: true, trim: true },
+      apellido: { type: String, required: true, trim: true },
+      dni: { type: String, required: true, trim: true },
       email: {
         type: String,
         required: true,
@@ -66,6 +51,16 @@ const ordenSchema = new mongoose.Schema(
       min: 1
     },
 
+    descuento: {
+      type: Number,
+      default: 0
+    },
+
+    codigo_descuento: {
+      type: String,
+      default: null
+    },
+
     estado: {
       type: String,
       enum: ["pendiente", "pagado", "cancelado"],
@@ -76,6 +71,11 @@ const ordenSchema = new mongoose.Schema(
     mp_payment_id: {
       type: String,
       index: true
+    },
+
+    mp_status: {
+      type: String,
+      default: "pending"
     }
   },
   { timestamps: true }

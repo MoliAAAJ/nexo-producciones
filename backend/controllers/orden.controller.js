@@ -8,7 +8,7 @@ import { generarPDF } from "../utils/generarPDF.js";
 import { preferenceClient } from "../config/mp.js";
 
 /**
- * 🧾 CREAR ORDEN (SIN DESCONTAR STOCK)
+ * 🧾 CREAR ORDEN (PROTEGIDO)
  */
 export const crearOrden = async (req, res) => {
   try {
@@ -16,15 +16,13 @@ export const crearOrden = async (req, res) => {
       evento_id,
       items,
       cliente,
-      codigo_descuento,
-      descuento = 0,
-      total_final
+      codigo_descuento
     } = req.body;
 
     console.log("📦 BODY:", req.body);
 
     /**
-     * VALIDACIONES BÁSICAS
+     * 🔥 VALIDACIÓN BÁSICA
      */
     if (!evento_id || !items?.length) {
       return res.status(400).json({
@@ -40,11 +38,20 @@ export const crearOrden = async (req, res) => {
       });
     }
 
+    /**
+     * 🚨 BLOQUEO POR ESTADO DEL EVENTO
+     */
+    if (evento.estado !== "activo") {
+      return res.status(400).json({
+        error: "Este evento no permite compras online"
+      });
+    }
+
     let total = 0;
     const itemsFinal = [];
 
     /**
-     * 🎟 ITEMS
+     * 🎟 VALIDACIÓN ITEMS
      */
     for (const item of items) {
       const cantidadNum = Number(item.cantidad || 1);
@@ -53,11 +60,8 @@ export const crearOrden = async (req, res) => {
         .trim()
         .toLowerCase();
 
-      console.log("🎟 ITEM:", tipo);
-
       const entrada = evento.entradas.find(
-        (e) =>
-          e.tipo.trim().toLowerCase() === tipo
+        (e) => e.tipo.trim().toLowerCase() === tipo
       );
 
       if (!entrada) {
@@ -73,8 +77,6 @@ export const crearOrden = async (req, res) => {
       }
 
       const stockDisponible = Number(entrada.stock || 0);
-
-      console.log("📦 STOCK:", stockDisponible);
 
       if (stockDisponible < cantidadNum) {
         return res.status(400).json({
@@ -92,20 +94,26 @@ export const crearOrden = async (req, res) => {
     }
 
     /**
-     * 💰 TOTAL FINAL
+     * 💰 DESCUENTO SIMPLE (solo validación backend)
      */
-    const totalConDescuento = Number(total_final || total);
+    let descuento = 0;
+
+    if (codigo_descuento === "NEXO10") {
+      descuento = total * 0.10;
+    }
+
+    const totalFinal = total - descuento;
 
     /**
-     * 🧾 CREAR ORDEN (PENDIENTE)
+     * 🧾 CREAR ORDEN
      */
     const orden = await Orden.create({
       evento_id,
       cliente,
       items: itemsFinal,
-      total: totalConDescuento,
+      total: totalFinal,
       descuento,
-      codigo_descuento,
+      codigo_descuento: codigo_descuento || null,
       estado: "pendiente"
     });
 
@@ -126,7 +134,7 @@ export const crearOrden = async (req, res) => {
           {
             title: `Entrada ${evento.nombre}`,
             quantity: 1,
-            unit_price: totalConDescuento,
+            unit_price: totalFinal,
             currency_id: "ARS"
           }
         ],
@@ -157,7 +165,7 @@ export const crearOrden = async (req, res) => {
     return res.json({
       ok: true,
       orden_id: orden._id,
-      total: totalConDescuento,
+      total: totalFinal,
       init_point
     });
 

@@ -72,17 +72,23 @@ const evento = JSON.parse(localStorage.getItem("evento"));
 const container = document.getElementById("container");
 
 /**
- * 🔥 FIX CRÍTICO: normalizar imagen SIEMPRE
+ * 🔥 IMAGEN SAFE
  */
 function fixImage(path) {
-
   if (!path) return "/assets/images/events/1.jpg";
-
   if (path.startsWith("http")) return path;
-
   if (path.startsWith("/assets")) return path;
-
   return "/assets/images/events/" + path;
+}
+
+/**
+ * 🧠 ESTADO EVENTO
+ */
+function estadoEvento(evento) {
+  if (evento.estado === "cerrado") return "cerrado";
+  if (evento.estado === "agotado") return "agotado";
+  if (evento.estado === "finalizado") return "finalizado";
+  return "activo";
 }
 
 if (!evento) {
@@ -98,8 +104,47 @@ if (!evento) {
   const fecha = new Date(evento.fecha).toLocaleDateString("es-AR");
 
   const entrada = evento.entradas?.[0];
-
   const precio = entrada?.precio || 0;
+
+  const estado = estadoEvento(evento);
+
+  let botonHTML = "";
+
+  if (estado === "activo") {
+
+    botonHTML = `
+      <button
+        onclick="comprar()"
+        class="mt-10 w-full bg-purple-600 hover:bg-purple-700 transition py-5 rounded-2xl font-bold text-xl"
+      >
+        Quiero asistir
+      </button>
+    `;
+
+  } else if (estado === "cerrado") {
+
+    botonHTML = `
+      <div class="mt-10 w-full bg-red-600/20 text-red-400 py-5 rounded-2xl font-bold text-center">
+        🚫 Ventas online cerradas
+      </div>
+    `;
+
+  } else if (estado === "agotado") {
+
+    botonHTML = `
+      <div class="mt-10 w-full bg-yellow-600/20 text-yellow-300 py-5 rounded-2xl font-bold text-center">
+        🎟 Entradas agotadas
+      </div>
+    `;
+
+  } else {
+
+    botonHTML = `
+      <div class="mt-10 w-full bg-gray-700/30 text-gray-400 py-5 rounded-2xl font-bold text-center">
+        📅 Evento finalizado
+      </div>
+    `;
+  }
 
   container.innerHTML = `
     <div class="grid lg:grid-cols-2 gap-10">
@@ -124,35 +169,34 @@ if (!evento) {
         </p>
 
         <div class="mt-6 text-gray-400 space-y-2">
+
           <div>📅 ${fecha}</div>
+
           <div>
             🕒 ${
               evento.fecha
                 ? new Date(evento.fecha).toLocaleTimeString("es-AR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false
-                })
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false
+                  })
                 : "Horario a confirmar"
             }
           </div>
+
           <div>
             📍 ${evento.lugar || "Lugar a confirmar"}
             📌 ${evento.direccion || ""}
             🌎 ${evento.localidad || ""}
           </div>
+
         </div>
 
         <h2 class="text-5xl text-green-400 mt-8">
           $${precio}
         </h2>
 
-        <button
-          onclick="comprar()"
-          class="mt-10 w-full bg-purple-600 hover:bg-purple-700 transition py-5 rounded-2xl font-bold text-xl"
-        >
-          Quiero asistir
-        </button>
+        ${botonHTML}
 
       </div>
 

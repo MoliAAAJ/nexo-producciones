@@ -566,7 +566,7 @@ async function continuarPago() {
       await res.json();
 
     if (!data.ok) {
-      throw new Error();
+      throw new Error(data.error || "Error en la compra");
     }
 
     window.location.href =
