@@ -159,6 +159,8 @@ async function initSuccess() {
 
           <p class="text-gray-400 mt-3">
             📍 ${evento.lugar || ""}
+            📌 ${evento.direccion || ""}
+            🌎 ${evento.localidad || ""}
           </p>
 
         </div>

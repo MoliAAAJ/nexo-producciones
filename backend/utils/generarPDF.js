@@ -120,8 +120,23 @@ export const generarPDF = (ticket, orden) => {
      */
     doc.text(
       `Lugar: ${
-        orden.evento_id?.lugar ||
-        "Lugar a confirmar"
+        orden.evento_id?.lugar || "Lugar"
+      }`
+    );
+
+    doc.moveDown(0.5);
+
+    doc.text(
+      `Dirección: ${
+        orden.evento_id?.direccion || ""
+      }`
+    );
+
+    doc.moveDown(0.5);
+
+    doc.text(
+      `Localidad: ${
+        orden.evento_id?.localidad || "Lugar a confirmar"
       }`
     );
 

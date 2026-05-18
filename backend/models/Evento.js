@@ -31,30 +31,47 @@ const eventoSchema = new mongoose.Schema(
       trim: true,
       minlength: 3
     },
+
     descripcion: {
       type: String,
       trim: true
     },
+
     fecha: {
       type: Date,
       required: true
     },
+
     lugar: {
       type: String,
       trim: true
     },
+
+    direccion: {
+      type: String,
+      trim: true
+    },
+
+    localidad: {
+      type: String,
+      trim: true
+    },
+
     hora: {
       type: String
     },
+
     imagen: {
       type: String,
       trim: true
     },
+
     estado: {
       type: String,
       enum: ["activo", "agotado", "finalizado"],
       default: "activo",
     },
+
     entradas: {
       type: [entradaSchema],
       validate: {

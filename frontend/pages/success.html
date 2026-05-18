@@ -173,6 +173,23 @@ function renderEvento(orden) {
   const imagen =
     getImagen(evento.imagen);
 
+  const fecha =
+    new Date(evento.fecha)
+      .toLocaleDateString("es-AR");
+
+  const hora =
+    evento.hora ||
+
+    new Date(evento.fecha)
+      .toLocaleTimeString(
+        "es-AR",
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        }
+      ) + " hs";
+
   eventoBox.classList.remove("hidden");
 
   eventoBox.innerHTML = `
@@ -191,16 +208,27 @@ function renderEvento(orden) {
           ${evento.nombre}
         </h2>
 
-        <div class="mt-4 space-y-2 text-gray-400">
+        <div class="mt-4 space-y-3 text-gray-400">
 
-          <p>
+          <div>
+            📅 ${fecha}
+          </div>
+
+          <div>
+            🕒 ${hora}
+          </div>
+
+          <div>
             📍 ${evento.lugar || "Lugar a confirmar"}
-          </p>
+          </div>
 
-          <p>
-            📅 ${new Date(evento.fecha)
-              .toLocaleDateString("es-AR")}
-          </p>
+          <div>
+            📌 ${evento.direccion || ""}
+          </div>
+
+          <div>
+            🌎 ${evento.localidad || ""}
+          </div>
 
         </div>
 
