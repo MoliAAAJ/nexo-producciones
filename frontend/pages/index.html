@@ -56,14 +56,87 @@
 
 const API = window.location.origin;
 let eventos = [];
-let categoriaActual = "Todos";
 
+/**
+ * 🧠 EVENTO FINALIZADO POR FECHA
+ */
+function eventoFinalizado(ev) {
+  return new Date(ev.fecha).getTime() < Date.now();
+}
+
+/**
+ * 🧠 ESTADO REAL DEL EVENTO
+ */
+function estadoEvento(ev) {
+
+  if (ev.estado === "cerrado") return "cerrado";
+  if (ev.estado === "agotado") return "agotado";
+  if (ev.estado === "finalizado") return "finalizado";
+  if (eventoFinalizado(ev)) return "finalizado";
+
+  return "activo";
+}
+
+/**
+ * 🎨 BADGE UI
+ */
+function badge(estado) {
+
+  const map = {
+    activo: "bg-green-600/20 text-green-300",
+    finalizado: "bg-gray-700/30 text-gray-400",
+    cerrado: "bg-red-600/20 text-red-300",
+    agotado: "bg-yellow-600/20 text-yellow-300"
+  };
+
+  const text = {
+    activo: "Activo",
+    finalizado: "Finalizado",
+    cerrado: "Cerrado",
+    agotado: "Agotado"
+  };
+
+  return `
+    <span class="${map[estado] || map.finalizado} px-3 py-1 rounded-full text-xs font-bold">
+      ${text[estado] || "Finalizado"}
+    </span>
+  `;
+}
+
+/**
+ * 🖼️ IMAGEN SAFE
+ */
+function getImage(img) {
+
+  if (!img) return "/assets/images/events/nexo_back.jpg";
+  if (img.startsWith("http")) return img;
+  if (img.startsWith("/assets")) return img;
+
+  return `/assets/images/events/${img}`;
+}
+
+/**
+ * 📡 CARGAR EVENTOS
+ */
 async function cargarEventos() {
 
   try {
 
     const res = await fetch(`${API}/eventos`);
-    eventos = await res.json();
+    let data = await res.json();
+
+    /**
+     * 🔥 ORDEN: activos primero
+     */
+    data.sort((a, b) => {
+
+      const aState = estadoEvento(a) === "activo" ? 0 : 1;
+      const bState = estadoEvento(b) === "activo" ? 0 : 1;
+
+      return aState - bState;
+    });
+
+    eventos = data;
 
     render(eventos);
 
@@ -71,16 +144,16 @@ async function cargarEventos() {
 
     document.getElementById("eventosContainer").innerHTML =
       `<p class="text-red-400">Error cargando eventos</p>`;
-
   }
 }
 
+/**
+ * 🎯 RENDER PRINCIPAL
+ */
 function render(lista) {
 
   const cont = document.getElementById("eventosContainer");
   const cantidad = document.getElementById("cantidadEventos");
-
-  if (!cont) return;
 
   cantidad.innerText = `${lista.length} eventos disponibles`;
 
@@ -88,30 +161,57 @@ function render(lista) {
 
   lista.forEach(ev => {
 
-    const img = ev.imagen?.startsWith("http")
-      ? ev.imagen
-      : `/assets/images/events/${ev.imagen}`;
+    const estado = estadoEvento(ev);
+    const img = getImage(ev.imagen);
+
+    let textoBtn = "";
+    let claseBtn = "";
+
+    if (estado === "activo") {
+
+      textoBtn = "Ver evento";
+      claseBtn = "bg-purple-600 hover:bg-purple-700";
+
+    } else if (estado === "finalizado") {
+
+      textoBtn = "Ver evento";
+      claseBtn = "bg-gray-700 text-gray-300";
+
+    } else if (estado === "cerrado") {
+
+      textoBtn = "Ventas cerradas";
+      claseBtn = "bg-red-600/30 text-red-300";
+
+    } else if (estado === "agotado") {
+
+      textoBtn = "Agotado";
+      claseBtn = "bg-yellow-600/30 text-yellow-300";
+    }
 
     cont.innerHTML += `
-      <div class="bg-gray-900 rounded-3xl overflow-hidden border border-white/10">
+      <div class="bg-gray-900 rounded-3xl overflow-hidden border border-white/10 hover:scale-[1.02] transition">
 
         <img src="${img}" class="w-full h-64 object-cover"/>
 
         <div class="p-5">
 
-          <h3 class="text-2xl font-bold text-purple-300">
-            ${ev.nombre}
-          </h3>
+          <div class="flex justify-between items-center">
+            <h3 class="text-2xl font-bold text-purple-300">
+              ${ev.nombre}
+            </h3>
+
+            ${badge(estado)}
+          </div>
 
           <p class="text-gray-400 mt-2">
-            ${ev.localidad || ""}
+            📍 ${ev.localidad || ""}
           </p>
 
           <button
             onclick='verEvento("${ev._id}")'
-            class="mt-5 w-full bg-purple-600 py-3 rounded-xl font-bold"
+            class="mt-5 w-full ${claseBtn} py-3 rounded-xl font-bold transition"
           >
-            Ver evento
+            ${textoBtn}
           </button>
 
         </div>
@@ -122,6 +222,9 @@ function render(lista) {
   });
 }
 
+/**
+ * 📦 IR A EVENTO (SIEMPRE PERMITIDO)
+ */
 function verEvento(id) {
 
   const evento = eventos.find(e => e._id === id);
