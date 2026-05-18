@@ -1,3 +1,5 @@
+"use strict";
+
 import express from "express";
 
 import {
@@ -9,10 +11,7 @@ import Orden from "../models/Orden.js";
 import Ticket from "../models/Ticket.js";
 
 import { generarQR } from "../utils/generarQR.js";
-
-import {
-  enviarTicketsEmail
-} from "../utils/enviarTicketsEmail.js";
+import { enviarTicketsEmail } from "../utils/enviarTicketsEmail.js";
 
 const router = express.Router();
 
@@ -23,7 +22,7 @@ const client = new MercadoPagoConfig({
 const paymentClient = new Payment(client);
 
 /**
- * 🔥 WEBHOOK MP
+ * 🔥 WEBHOOK MERCADOPAGO
  */
 router.post("/webhook", async (req, res) => {
 
@@ -32,69 +31,90 @@ router.post("/webhook", async (req, res) => {
     console.log("🔥 WEBHOOK RECIBIDO");
     console.log(req.body);
 
+    const type = req.body?.type || req.body?.topic;
+
+    let paymentId = null;
+
     /**
-     * 🔥 FIX REAL
+     * 💳 CASO 1: PAYMENT DIRECTO
      */
-    const paymentId =
-      req.body?.data?.id ||
-      req.query["data.id"];
+    if (type === "payment") {
+      paymentId =
+        req.body?.data?.id ||
+        req.query["data.id"];
+    }
 
+    /**
+     * 🧾 CASO 2: MERCHANT ORDER
+     */
+    if (type === "merchant_order") {
+
+      const url = req.body?.resource;
+
+      if (!url) {
+        console.log("❌ merchant_order sin resource");
+        return res.sendStatus(200);
+      }
+
+      console.log("🧾 Merchant Order URL:", url);
+
+      const response = await fetch(url);
+      const merchantOrder = await response.json();
+
+      const payment = merchantOrder.payments?.find(
+        p => p.status === "approved"
+      );
+
+      if (!payment) {
+        console.log("⚠ sin payment aprobado en merchant_order");
+        return res.sendStatus(200);
+      }
+
+      paymentId = payment.id;
+    }
+
+    /**
+     * ❌ SIN PAYMENT
+     */
     if (!paymentId) {
-
       console.log("❌ paymentId missing");
-
       return res.sendStatus(200);
     }
 
     /**
-     * 💳 PAYMENT REAL
+     * 💳 OBTENER PAYMENT REAL
      */
-    const payment =
-      await paymentClient.get({
-        id: paymentId
-      });
+    const payment = await paymentClient.get({
+      id: paymentId
+    });
 
-    console.log("💳 PAYMENT:", payment);
+    const paymentData = payment.body || payment;
 
-    /**
-     * 🔥 FIX SDK RESPONSE
-     */
-    const paymentData =
-      payment.body || payment;
+    console.log("💳 PAYMENT:", paymentData);
 
-    const orderId =
-      paymentData.external_reference;
+    const orderId = paymentData.external_reference;
 
     if (!orderId) {
-
-      console.log(
-        "❌ external_reference missing"
-      );
-
+      console.log("❌ external_reference missing");
       return res.sendStatus(200);
     }
 
     /**
      * 📦 ORDEN
      */
-    const orden =
-      await Orden.findById(orderId)
+    const orden = await Orden.findById(orderId)
       .populate("evento_id");
 
     if (!orden) {
-
       console.log("❌ Orden no encontrada");
-
       return res.sendStatus(200);
     }
 
     /**
-     * 🚫 DUPLICADOS
+     * 🚫 DUPLICADO
      */
     if (orden.estado === "pagado") {
-
       console.log("⚠ Orden ya pagada");
-
       return res.sendStatus(200);
     }
 
@@ -102,17 +122,14 @@ router.post("/webhook", async (req, res) => {
      * ❌ NO APROBADO
      */
     if (paymentData.status !== "approved") {
-
       console.log("⚠ Pago no aprobado");
-
       return res.sendStatus(200);
     }
 
     /**
-     * ✅ PAGADA
+     * ✅ MARCAR PAGADO
      */
     orden.estado = "pagado";
-
     await orden.save();
 
     /**
@@ -127,19 +144,13 @@ router.post("/webhook", async (req, res) => {
       for (let i = 0; i < item.cantidad; i++) {
 
         const ticket = new Ticket({
-
           orden_id: orden._id,
-
           evento_id: evento._id,
-
           tipo: item.tipo,
-
           usado: false
-
         });
 
-        ticket.qr_code =
-          await generarQR(ticket._id);
+        ticket.qr_code = await generarQR(ticket._id);
 
         await ticket.save();
 
@@ -147,29 +158,18 @@ router.post("/webhook", async (req, res) => {
       }
     }
 
-    console.log(
-      "🎟️ Tickets generados correctamente"
-    );
+    console.log("🎟️ Tickets generados correctamente");
 
     /**
-     * 📧 EMAIL
+     * 📧 EMAIL (async safe)
      */
     enviarTicketsEmail({
-
       cliente: orden.cliente,
-
       evento: orden.evento_id,
-
       tickets: ticketsGenerados
-
-    }).catch(error => {
-
-      console.error(
-        "❌ Error mail:",
-        error
-      );
-
-    });
+    }).catch(err =>
+      console.error("❌ Error mail:", err)
+    );
 
     console.log("📧 Email enviado");
 
@@ -177,10 +177,7 @@ router.post("/webhook", async (req, res) => {
 
   } catch (error) {
 
-    console.error(
-      "❌ ERROR WEBHOOK:",
-      error
-    );
+    console.error("❌ ERROR WEBHOOK:", error);
 
     return res.sendStatus(500);
   }
