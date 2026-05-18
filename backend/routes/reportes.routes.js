@@ -32,7 +32,10 @@ router.get("/eventos/:id/pdf", async (req, res) => {
     doc.pipe(res);
 
     // 🖼️ LOGO
-    const logoPath = path.resolve("assets/images/branding/nexo_logo_transparente.png");
+    const logoPath = path.join(
+      process.cwd(),
+      "../frontend/public/assets/images/branding/nexo_logo_transparente.png"
+    );
 
     doc.image(logoPath, {
       fit: [120, 120],
