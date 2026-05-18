@@ -146,12 +146,18 @@ export const generarPDF = (ticket, orden) => {
     /**
      * 🕒 HORA
      */
-    doc.text(
-      `Hora: ${
-        orden.evento_id?.hora ||
-        "Horario a confirmar"
-      }`
-    );
+    const horaEvento =
+      orden.evento_id?.fecha
+      ? new Date(
+        orden.evento_id.fecha
+        ).toLocaleTimeString("es-AR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        })
+      : "Horario a confirmar";
+
+    doc.text(`Hora: ${horaEvento} hs`);
 
     doc.moveDown(1.5);
 

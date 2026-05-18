@@ -14,7 +14,14 @@ export const crearOrden = async (req, res) => {
 
   try {
 
-    const { evento_id, items, cliente } = req.body;
+    const {
+      evento_id,
+      items,
+      cliente,
+      codigo_descuento,
+      descuento = 0,
+      total_final
+    } = req.body;
 
     console.log("📦 BODY:", req.body);
 
@@ -106,21 +113,37 @@ export const crearOrden = async (req, res) => {
         });
       }
 
-      total += Number(entrada.precio) * cantidadNum;
+      total +=
+        Number(entrada.precio) *
+        cantidadNum;
 
       itemsFinal.push({
+
         tipo: entrada.tipo,
+
         cantidad: cantidadNum,
-        precio_unitario: Number(entrada.precio)
+
+        precio_unitario:
+          Number(entrada.precio)
+
       });
 
+      /**
+       * 🔥 DESCONTAR STOCK
+       */
       entrada.stock =
         stockDisponible - cantidadNum;
 
     }
 
     /**
-     * 💾 SAVE EVENTO
+     * 🔥 TOTAL FINAL
+     */
+    const totalConDescuento =
+      Number(total_final || total);
+
+    /**
+     * 💾 GUARDAR EVENTO
      */
     await evento.save();
 
@@ -135,7 +158,11 @@ export const crearOrden = async (req, res) => {
 
       items: itemsFinal,
 
-      total,
+      total: totalConDescuento,
+
+      descuento,
+
+      codigo_descuento,
 
       estado: "pendiente"
     });
@@ -167,14 +194,17 @@ export const crearOrden = async (req, res) => {
           items: [
 
             {
+
               title:
                 `Entrada ${evento.nombre}`,
 
               quantity: 1,
 
-              unit_price: total,
+              unit_price:
+                totalConDescuento,
 
               currency_id: "ARS"
+
             }
 
           ],
@@ -218,7 +248,7 @@ export const crearOrden = async (req, res) => {
     );
 
     /**
-     * ❌ MP FAIL
+     * ❌ ERROR MP
      */
     if (!init_point) {
 
@@ -237,7 +267,7 @@ export const crearOrden = async (req, res) => {
 
       orden_id: orden._id,
 
-      total,
+      total: totalConDescuento,
 
       init_point
     });
