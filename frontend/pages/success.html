@@ -60,7 +60,7 @@
     </h1>
 
     <p class="text-gray-400 mt-3 text-lg">
-      Tu ticket ya está listo
+      Su ticket ya está listo - ¡Gracias por su compra! - Esperamos que disfrute del evento.
     </p>
 
   </div>
@@ -73,7 +73,7 @@
 
   <div
     id="ticketsContainer"
-    class="grid md:grid-cols-2 gap-6"
+    class="flex justify-center items-center"
   ></div>
 
 </main>
@@ -297,7 +297,7 @@ function renderTickets(tickets, orden) {
     document.createElement("div");
 
   card.className =
-    "bg-gray-900 border border-white/10 rounded-3xl p-8 text-center max-w-xl mx-auto";
+    "bg-gray-900 border border-white/10 rounded-3xl p-8 text-center w-full max-w-xl";
 
   card.innerHTML = `
 
