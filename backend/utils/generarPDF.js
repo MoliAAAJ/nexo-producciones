@@ -11,12 +11,9 @@ export const generarPDF = (ticket, orden) => {
 
     const doc = new PDFDocument({
       size: "A4",
-      margin: 50
+      margin: 40
     });
 
-    /**
-     * 🔥 LOGO
-     */
     const logoPath = path.join(
       __dirname,
       "../../frontend/public/assets/images/branding/nexo_logo_transparente.png"
@@ -24,18 +21,10 @@ export const generarPDF = (ticket, orden) => {
 
     const buffers = [];
 
-    doc.on(
-      "data",
-      buffers.push.bind(buffers)
-    );
+    doc.on("data", buffers.push.bind(buffers));
 
     doc.on("end", () => {
-
-      const pdfData =
-        Buffer.concat(buffers);
-
-      resolve(pdfData);
-
+      resolve(Buffer.concat(buffers));
     });
 
     /**
@@ -54,97 +43,79 @@ export const generarPDF = (ticket, orden) => {
 
       doc.image(
         logoPath,
-        (doc.page.width - 80) / 2,
-        20,
+        (doc.page.width - 70) / 2,
+        18,
         {
-          fit: [80, 80],
+          fit: [70, 70],
           align: "center"
         }
       );
 
     } catch (error) {
-
       console.log("⚠️ Logo no encontrado");
-      console.log(error);
-
     }
 
-    /**
-     * 🔥 POSICIÓN MANUAL
-     */
-    doc.y = 115;
+    doc.y = 90;
 
     /**
      * 🎵 EVENTO
      */
     const nombreEvento =
-      orden.evento_id?.nombre ||
-      "EVENTO";
+      orden.evento_id?.nombre || "EVENTO";
 
     doc
-      .fontSize(24)
+      .fontSize(22)
       .fillColor("#a855f7")
+      .font("Helvetica-Bold")
       .text(
         nombreEvento,
+        40,
+        doc.y,
         {
+          width: doc.page.width - 80,
           align: "center"
         }
       );
 
-    doc.moveDown(1.5);
+    doc.moveDown(0.8);
 
     /**
-     * 👤 CLIENTE
+     * 🎟️ CARD INFO
      */
+    const startX = 55;
+    const startY = doc.y;
+
     doc
-      .fontSize(14)
-      .fillColor("white");
+      .roundedRect(
+        startX,
+        startY,
+        500,
+        210,
+        18
+      )
+      .fill("#18181b");
 
-    doc.text(
-      `Cliente: ${orden.cliente.nombre} ${orden.cliente.apellido}`
-    );
-
-    doc.moveDown(0.7);
-
-    /**
-     * 🎟️ TIPO
-     */
-    doc.text(
-      `Tipo entrada: ${ticket.tipo}`
-    );
-
-    doc.moveDown(0.7);
+    doc.fillColor("white");
 
     /**
-     * 📍 LUGAR
+     * Helpers
      */
-    doc.text(
-      `Lugar: ${
-        orden.evento_id?.lugar || "Lugar"
-      }`
-    );
+    const label = (txt, y, x = 75) => {
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(10)
+        .fillColor("#a1a1aa")
+        .text(txt, x, y);
+    };
 
-    doc.moveDown(0.5);
+    const value = (txt, y, x = 75) => {
+      doc
+        .font("Helvetica")
+        .fontSize(13)
+        .fillColor("white")
+        .text(txt, x, y + 14);
+    };
 
-    doc.text(
-      `Dirección: ${
-        orden.evento_id?.direccion || ""
-      }`
-    );
-
-    doc.moveDown(0.5);
-
-    doc.text(
-      `Localidad: ${
-        orden.evento_id?.localidad || "Lugar a confirmar"
-      }`
-    );
-
-    doc.moveDown(0.7);
-
-    /**
-     * 📅 FECHA
-     */
     const fechaEvento =
       orden.evento_id?.fecha
         ? new Date(
@@ -152,117 +123,179 @@ export const generarPDF = (ticket, orden) => {
           ).toLocaleDateString("es-AR")
         : "Fecha a confirmar";
 
-    doc.text(
-      `Fecha: ${fechaEvento}`
+    const horaEvento =
+      orden.evento_id?.fecha
+        ? new Date(
+            orden.evento_id.fecha
+          ).toLocaleTimeString("es-AR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+          })
+        : "Horario a confirmar";
+
+    /**
+     * 👤 ASISTENTE
+     */
+    label("ASISTENTE", startY + 18);
+
+    value(
+      `${orden.cliente.nombre} ${orden.cliente.apellido}`,
+      startY + 18
     );
 
-    doc.moveDown(0.7);
+    /**
+     * 🎟️ ENTRADA
+     */
+    label("ENTRADA", startY + 58);
+
+    value(ticket.tipo, startY + 58);
+
+    /**
+     * 📍 LUGAR
+     */
+    label("LUGAR", startY + 98);
+
+    value(
+      `${orden.evento_id?.lugar || "Lugar a confirmar"}`,
+      startY + 98
+    );
+
+    /**
+     * 📌 DIRECCIÓN
+     */
+    label("DIRECCIÓN", startY + 138);
+
+    value(
+      `${orden.evento_id?.direccion || "Dirección a confirmar"}`,
+      startY + 138
+    );
+
+    /**
+     * 🌎 LOCALIDAD
+     */
+    label("LOCALIDAD", startY + 178);
+
+    value(
+      `${orden.evento_id?.localidad || "Localidad a confirmar"}`,
+      startY + 178
+    );
+
+    /**
+     * 📅 FECHA
+     */
+    label("FECHA", startY + 18, 360);
+
+    value(
+      fechaEvento,
+      startY + 18,
+      360
+    );
 
     /**
      * 🕒 HORA
      */
-    const horaEvento =
-      orden.evento_id?.fecha
-      ? new Date(
-        orden.evento_id.fecha
-        ).toLocaleTimeString("es-AR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false
-        })
-      : "Horario a confirmar";
+    label("HORA", startY + 58, 360);
 
-    doc.text(`Hora: ${horaEvento} hs`);
-
-    doc.moveDown(1.5);
+    value(
+      `${horaEvento} hs`,
+      startY + 58,
+      360
+    );
 
     /**
-     * 🎟️ QR TITLE
+     * 🔥 QR SECTION
      */
+    doc.y = startY + 245;
+
     doc
-      .fontSize(16)
+      .fontSize(15)
+      .font("Helvetica-Bold")
       .fillColor("#22c55e")
       .text(
-        "Escaneá este QR en puerta",
+        "Escaneá este código al ingresar",
+        40,
+        doc.y,
         {
+          width: doc.page.width - 80,
           align: "center"
         }
       );
 
-    doc.moveDown(1);
+    doc.moveDown(0.6);
 
     /**
-     * 🔥 QR
+     * 🔳 QR
      */
-    const qrSize = 150;
+    const qrSize = 120;
 
-    const x =
+    const qrX =
       (doc.page.width - qrSize) / 2;
 
     doc.image(
-
       Buffer.from(
         ticket.qr_code.split(",")[1],
         "base64"
       ),
-
-      x,
-
+      qrX,
       doc.y,
-
       {
         width: qrSize,
         height: qrSize
       }
-
     );
 
-    /**
-     * 🔥 BAJAR MANUALMENTE
-     */
-    doc.y += 170;
+    doc.y += 135;
 
     /**
      * 🔑 CODE
      */
     doc
-      .fontSize(16)
+      .font("Helvetica-Bold")
+      .fontSize(15)
       .fillColor("#a855f7")
       .text(
-
-        `Código: NEXO-${ticket._id
+        `NEXO-${ticket._id
           .toString()
           .slice(-5)}`,
-
+        40,
+        doc.y,
         {
+          width: doc.page.width - 80,
           align: "center"
         }
-
       );
 
-    doc.moveDown(1);
+    doc.moveDown(0.7);
 
     /**
      * 🦶 FOOTER
      */
     doc
-      .fontSize(11)
+      .font("Helvetica")
+      .fontSize(10)
       .fillColor("#9ca3af")
       .text(
-        "Presentar este ticket al ingresar al evento",
+        "Presentarse con este ticket digital en el ingreso 15 minutos antes del comienzo del evento.",
+        40,
+        doc.y,
         {
+          width: doc.page.width - 80,
           align: "center"
         }
       );
 
-    doc.moveDown(0.5);
+    doc.moveDown(0.3);
 
     doc
-      .fontSize(10)
+      .fontSize(9)
       .fillColor("#6b7280")
       .text(
-        "NEXO Tickets • Powered by MercadoPago",
+        "NEXO Tickets • Powered by Mercado Pago",
+        40,
+        doc.y,
         {
+          width: doc.page.width - 80,
           align: "center"
         }
       );
