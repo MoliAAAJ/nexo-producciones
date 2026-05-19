@@ -12,8 +12,13 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    body { background: #0f0f12; }
-    * { font-family: 'Inter', sans-serif; }
+    body {
+      background: #0f0f12;
+    }
+
+    * {
+      font-family: 'Inter', sans-serif;
+    }
   </style>
 
 </head>
@@ -24,6 +29,7 @@
 
   <div class="max-w-7xl mx-auto px-5 py-4 grid grid-cols-3 items-center">
 
+    <!-- LOGO -->
     <button
       onclick="window.open('https://nexoesquel.com', '_blank')"
       class="justify-self-start bg-transparent border-0 p-0 hover:opacity-80 hover:scale-105 transform duration-200 transition"
@@ -34,15 +40,23 @@
       />
     </button>
 
+    <!-- AYUDA -->
     <div class="justify-self-center">
-      <button onclick="abrirFAQ()"
-        class="bg-purple-600 hover:bg-purple-700 text-white transition px-5 py-2 rounded-xl text-sm font-semibold"c>
+
+      <button
+        onclick="abrirFAQ()"
+        class="bg-purple-600 hover:bg-purple-700 text-white transition px-5 py-2 rounded-xl text-sm font-semibold"
+      >
         Ayuda
       </button>
+
     </div>
 
-    <a href="/index.html"
-      class="justify-self-end text-xl font-extrabold text-purple-400 hover:opacity-80 transition">
+    <!-- NEXO -->
+    <a
+      href="/index.html"
+      class="justify-self-end text-xl font-extrabold text-purple-400 hover:opacity-80 transition"
+    >
       NEXO <span class="text-white">Tickets</span>
     </a>
 
@@ -54,33 +68,91 @@
 
   <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10">
 
+    <!-- EVENTO -->
     <div id="eventoInfo"></div>
 
+    <!-- CHECKOUT -->
     <div class="bg-gray-900 border border-white/10 rounded-3xl p-8">
 
-      <h2 class="text-3xl font-extrabold mb-8">Comprar entradas</h2>
+      <h2 class="text-3xl font-extrabold mb-8">
+        Comprar entradas
+      </h2>
 
-      <input id="nombre" placeholder="Nombre" class="w-full mb-4 bg-black/40 p-4 rounded-xl"/>
-      <input id="apellido" placeholder="Apellido" class="w-full mb-4 bg-black/40 p-4 rounded-xl"/>
-      <input id="dni" placeholder="DNI" class="w-full mb-4 bg-black/40 p-4 rounded-xl"/>
-      <input id="email" placeholder="Email" class="w-full mb-4 bg-black/40 p-4 rounded-xl"/>
+      <input
+        id="nombre"
+        placeholder="Nombre"
+        class="w-full mb-4 bg-black/40 p-4 rounded-xl"
+      />
 
-      <select id="tipoEntrada" class="w-full mb-4 bg-black/40 p-4 rounded-xl"></select>
+      <input
+        id="apellido"
+        placeholder="Apellido"
+        class="w-full mb-4 bg-black/40 p-4 rounded-xl"
+      />
 
-      <input id="codigo" placeholder="Código descuento" class="w-full mb-4 bg-black/40 p-4 rounded-xl"/>
+      <input
+        id="dni"
+        placeholder="DNI"
+        class="w-full mb-4 bg-black/40 p-4 rounded-xl"
+      />
+
+      <input
+        id="email"
+        type="email"
+        placeholder="Email"
+        class="w-full mb-2 bg-black/40 p-4 rounded-xl"
+      />
+
+      <!-- ERROR MAIL -->
+      <p
+        id="emailError"
+        class="text-red-400 text-sm mb-4 hidden"
+      >
+        Ingresá un email válido
+      </p>
+
+      <!-- ENTRADA -->
+      <select
+        id="tipoEntrada"
+        class="w-full mb-4 bg-black/40 p-4 rounded-xl"
+      ></select>
+
+      <!-- CUPON -->
+      <input
+        id="codigo"
+        placeholder="Código descuento"
+        class="w-full mb-4 bg-black/40 p-4 rounded-xl"
+      />
 
       <!-- CANTIDAD -->
       <div class="flex items-center justify-between mt-6">
 
-        <span class="text-gray-400">Cantidad</span>
+        <span class="text-gray-400">
+          Cantidad
+        </span>
 
         <div class="flex items-center gap-4">
 
-          <button onclick="restar()" class="w-10 h-10 bg-gray-800 rounded-xl">-</button>
+          <button
+            onclick="restar()"
+            class="w-10 h-10 bg-gray-800 rounded-xl hover:bg-gray-700 transition"
+          >
+            -
+          </button>
 
-          <span id="cantidad" class="text-xl font-bold">1</span>
+          <span
+            id="cantidad"
+            class="text-xl font-bold"
+          >
+            1
+          </span>
 
-          <button onclick="sumar()" class="w-10 h-10 bg-gray-800 rounded-xl">+</button>
+          <button
+            onclick="sumar()"
+            class="w-10 h-10 bg-gray-800 rounded-xl hover:bg-gray-700 transition"
+          >
+            +
+          </button>
 
         </div>
 
@@ -94,18 +166,61 @@
           <span id="subtotal">$0</span>
         </div>
 
-        <div id="discountBox" class="flex justify-between text-green-400 hidden">
+        <div
+          id="discountBox"
+          class="flex justify-between text-green-400 hidden"
+        >
           <span>Descuento</span>
           <span id="descuento">$0</span>
         </div>
 
         <div class="flex justify-between text-xl font-bold mt-4">
+
           <span>Total</span>
+
           <span id="total">$0</span>
+
         </div>
 
       </div>
 
+      <!-- TERMINOS -->
+      <div class="mt-8">
+
+        <label class="flex items-start gap-3 text-sm text-gray-300">
+
+          <input
+            id="terminos"
+            type="checkbox"
+            class="mt-1 accent-purple-600"
+          />
+
+          <span>
+
+            Acepto los
+
+            <button
+              type="button"
+              onclick="abrirTerminos()"
+              class="text-purple-400 hover:text-purple-300 underline"
+            >
+              términos y condiciones
+            </button>
+
+          </span>
+
+        </label>
+
+        <p
+          id="terminosError"
+          class="text-red-400 text-sm mt-3 hidden"
+        >
+          Debés aceptar los términos y condiciones
+        </p>
+
+      </div>
+
+      <!-- BOTON -->
       <button
         onclick="continuarPago()"
         class="mt-8 w-full bg-purple-600 hover:bg-purple-700 active:bg-purple-800 transition-all duration-200 transform hover:scale-[1.02] py-5 rounded-2xl font-bold"
@@ -124,22 +239,86 @@
 </footer>
 
 <!-- FAQ -->
-<div id="faqModal"
-     class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 px-5">
+<div
+  id="faqModal"
+  class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 px-5"
+>
 
   <div class="bg-gray-900 rounded-3xl border border-white/10 max-w-2xl w-full p-8 relative">
 
-    <button onclick="cerrarFAQ()"
-      class="absolute top-4 right-4 text-2xl">×</button>
+    <button
+      onclick="cerrarFAQ()"
+      class="absolute top-4 right-4 text-2xl"
+    >
+      ×
+    </button>
 
-    <h2 class="text-3xl font-bold text-purple-400 mb-6">Ayuda</h2>
+    <h2 class="text-3xl font-bold text-purple-400 mb-6">
+      Ayuda
+    </h2>
 
-    <p class="text-gray-300">
+    <p class="text-gray-300 leading-8">
+
       En esta pantalla estás comprando entradas.<br><br>
+
       👉 Elegí tipo y cantidad<br>
       👉 Ingresá tus datos<br>
+      👉 Aplicá un cupón si tenés<br>
+      👉 Aceptá los términos y condiciones<br>
       👉 Vas a Mercado Pago automáticamente
+
     </p>
+
+  </div>
+
+</div>
+
+<!-- TERMINOS -->
+<div
+  id="terminosModal"
+  class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 px-5"
+>
+
+  <div class="bg-gray-900 rounded-3xl border border-white/10 max-w-3xl w-full p-8 relative max-h-[90vh] overflow-y-auto">
+
+    <button
+      onclick="cerrarTerminos()"
+      class="absolute top-4 right-4 text-2xl"
+    >
+      ×
+    </button>
+
+    <h2 class="text-3xl font-bold text-purple-400 mb-6">
+      Términos y condiciones
+    </h2>
+
+    <div class="text-gray-300 leading-8 space-y-5 text-sm">
+
+      <p>
+        Las entradas adquiridas son válidas únicamente para el evento indicado.
+      </p>
+
+      <p>
+        Una vez confirmada la compra, no se realizan devoluciones salvo cancelación oficial del evento.
+      </p>
+
+      <p>
+        El organizador podrá modificar horarios o ubicación por razones operativas.
+      </p>
+
+      <p>
+        El ingreso podrá ser rechazado en caso de ticket duplicado, dañado o inválido.
+      </p>
+
+      <p>
+        El comprador es responsable de verificar correctamente sus datos antes de finalizar la compra.
+      </p>
+
+      <p>
+        Al continuar aceptás recibir la entrada digital por email.
+      </p>
+
+    </div>
 
   </div>
 
@@ -150,26 +329,69 @@
 let evento = JSON.parse(localStorage.getItem("evento"));
 
 if (!evento) {
+
   document.body.innerHTML =
     "<h1 class='text-red-400 text-center mt-10'>Evento no encontrado</h1>";
+
   throw new Error("Evento missing");
 }
 
 let cantidad = 1;
-let entradaSeleccionada = evento.entradas?.[0];
-let precio = Number(entradaSeleccionada?.precio || 0);
+
+let entradaSeleccionada =
+  evento.entradas?.[0];
+
+let precio =
+  Number(entradaSeleccionada?.precio || 0);
 
 /**
- * 🔥 FIX GLOBAL (AYUDA)
+ * FAQ
  */
 window.abrirFAQ = function () {
-  document.getElementById("faqModal").classList.remove("hidden");
-  document.getElementById("faqModal").classList.add("flex");
+
+  document
+    .getElementById("faqModal")
+    .classList.remove("hidden");
+
+  document
+    .getElementById("faqModal")
+    .classList.add("flex");
 };
 
 window.cerrarFAQ = function () {
-  document.getElementById("faqModal").classList.add("hidden");
-  document.getElementById("faqModal").classList.remove("flex");
+
+  document
+    .getElementById("faqModal")
+    .classList.add("hidden");
+
+  document
+    .getElementById("faqModal")
+    .classList.remove("flex");
+};
+
+/**
+ * TERMINOS
+ */
+window.abrirTerminos = function () {
+
+  document
+    .getElementById("terminosModal")
+    .classList.remove("hidden");
+
+  document
+    .getElementById("terminosModal")
+    .classList.add("flex");
+};
+
+window.cerrarTerminos = function () {
+
+  document
+    .getElementById("terminosModal")
+    .classList.add("hidden");
+
+  document
+    .getElementById("terminosModal")
+    .classList.remove("flex");
 };
 
 /**
@@ -177,27 +399,38 @@ window.cerrarFAQ = function () {
  */
 function renderEvento() {
 
-  const fecha = new Date(evento.fecha).toLocaleDateString("es-AR");
-  const hora = new Date(evento.fecha).toLocaleTimeString("es-AR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  });
+  const fecha =
+    new Date(evento.fecha)
+      .toLocaleDateString("es-AR");
+
+  const hora =
+    new Date(evento.fecha)
+      .toLocaleTimeString("es-AR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      });
 
   document.getElementById("eventoInfo").innerHTML = `
+
     <div>
 
-      <img src="/assets/images/events/${evento.imagen}"
-           class="rounded-2xl mb-6 w-full object-cover"/>
+      <img
+        src="/assets/images/events/${evento.imagen}"
+        class="rounded-2xl mb-6 w-full object-cover"
+      />
 
-      <h1 class="text-4xl font-bold">${evento.nombre}</h1>
+      <h1 class="text-4xl font-bold">
+        ${evento.nombre}
+      </h1>
 
       <p class="text-gray-400 mt-2">
         📅 ${fecha} - 🕒 ${hora}
       </p>
 
       <p class="text-gray-500 mt-2">
-        📍 ${evento.lugar || ""} ${evento.localidad || ""}
+        📍 ${evento.lugar || ""}
+        ${evento.localidad || ""}
       </p>
 
     </div>
@@ -209,11 +442,13 @@ function renderEvento() {
  */
 function renderEntradas() {
 
-  const select = document.getElementById("tipoEntrada");
+  const select =
+    document.getElementById("tipoEntrada");
 
   select.innerHTML = "";
 
   evento.entradas.forEach(e => {
+
     select.innerHTML += `
       <option value="${e.tipo}">
         ${e.tipo} - $${e.precio}
@@ -223,11 +458,14 @@ function renderEntradas() {
 
   select.addEventListener("change", (ev) => {
 
-    entradaSeleccionada = evento.entradas.find(
-      e => e.tipo === ev.target.value
-    );
+    entradaSeleccionada =
+      evento.entradas.find(
+        e => e.tipo === ev.target.value
+      );
 
-    precio = Number(entradaSeleccionada.precio);
+    precio =
+      Number(entradaSeleccionada.precio);
+
     cantidad = 1;
 
     actualizarTotal();
@@ -238,23 +476,35 @@ function renderEntradas() {
  * CANTIDAD
  */
 window.sumar = function () {
+
   cantidad++;
+
   actualizarTotal();
 };
 
 window.restar = function () {
-  if (cantidad > 1) cantidad--;
+
+  if (cantidad > 1) {
+    cantidad--;
+  }
+
   actualizarTotal();
 };
 
 /**
- * TOTAL + DESCUENTO
+ * TOTAL
  */
 function actualizarTotal() {
 
-  const subtotal = precio * cantidad;
+  const subtotal =
+    precio * cantidad;
 
-  const codigo = (document.getElementById("codigo").value || "")
+  const codigo =
+    (
+      document
+        .getElementById("codigo")
+        .value || ""
+    )
     .trim()
     .toUpperCase();
 
@@ -264,75 +514,183 @@ function actualizarTotal() {
     descuento = subtotal * 0.10;
   }
 
-  const total = subtotal - descuento;
+  const total =
+    subtotal - descuento;
 
-  document.getElementById("cantidad").innerText = cantidad;
-  document.getElementById("subtotal").innerText = `$${subtotal}`;
-  document.getElementById("total").innerText = `$${total}`;
+  document.getElementById("cantidad")
+    .innerText = cantidad;
 
-  const box = document.getElementById("discountBox");
+  document.getElementById("subtotal")
+    .innerText = `$${subtotal}`;
+
+  document.getElementById("total")
+    .innerText = `$${total}`;
+
+  const box =
+    document.getElementById("discountBox");
 
   if (descuento > 0) {
+
     box.classList.remove("hidden");
-    document.getElementById("descuento").innerText = `-$${descuento}`;
+
+    document.getElementById("descuento")
+      .innerText = `-$${descuento}`;
+
   } else {
+
     box.classList.add("hidden");
   }
 }
 
 /**
- * 🔥 FIX INPUT LIVE
+ * CUPON LIVE
  */
-document.getElementById("codigo")
+document
+  .getElementById("codigo")
   .addEventListener("input", actualizarTotal);
 
 /**
- * 💳 PAGO GLOBAL FIX
+ * EMAIL VALIDO
+ */
+function validarEmail(email) {
+
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    .test(email);
+}
+
+/**
+ * PAGO
  */
 window.continuarPago = async function () {
 
-  const nombre = document.getElementById("nombre").value;
-  const apellido = document.getElementById("apellido").value;
-  const dni = document.getElementById("dni").value;
-  const email = document.getElementById("email").value;
+  const nombre =
+    document.getElementById("nombre").value.trim();
 
+  const apellido =
+    document.getElementById("apellido").value.trim();
+
+  const dni =
+    document.getElementById("dni").value.trim();
+
+  const email =
+    document.getElementById("email").value.trim();
+
+  const aceptaTerminos =
+    document.getElementById("terminos").checked;
+
+  /**
+   * RESET ERRORES
+   */
+  document
+    .getElementById("emailError")
+    .classList.add("hidden");
+
+  document
+    .getElementById("terminosError")
+    .classList.add("hidden");
+
+  /**
+   * VALIDAR CAMPOS
+   */
   if (!nombre || !apellido || !dni || !email) {
-    return alert("Completa todos los campos");
+
+    return alert(
+      "Completa todos los campos"
+    );
   }
 
-  const res = await fetch(`${window.location.origin}/api/orden`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      evento_id: evento._id,
-        items: [{
-          tipo: entradaSeleccionada.tipo,
-          cantidad
-        }],
-      cliente: { nombre, apellido, dni, email },
+  /**
+   * VALIDAR EMAIL
+   */
+  if (!validarEmail(email)) {
 
-      // 🔥 FIX DESCUENTO
-      codigo_descuento: document.getElementById("codigo").value.trim().toUpperCase()
-    })
-  });
+    document
+      .getElementById("emailError")
+      .classList.remove("hidden");
 
-  const data = await res.json();
+    return;
+  }
+
+  /**
+   * VALIDAR TERMINOS
+   */
+  if (!aceptaTerminos) {
+
+    document
+      .getElementById("terminosError")
+      .classList.remove("hidden");
+
+    return;
+  }
+
+  /**
+   * API
+   */
+  const res = await fetch(
+    `${window.location.origin}/api/orden`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+
+        evento_id: evento._id,
+
+        items: [
+          {
+            tipo: entradaSeleccionada.tipo,
+            cantidad
+          }
+        ],
+
+        cliente: {
+          nombre,
+          apellido,
+          dni,
+          email
+        },
+
+        codigo_descuento:
+          document
+            .getElementById("codigo")
+            .value
+            .trim()
+            .toUpperCase()
+      })
+    }
+  );
+
+  const data =
+    await res.json();
 
   if (!data.ok) {
-    return alert(data.error || "Error en compra");
+
+    return alert(
+      data.error || "Error en compra"
+    );
   }
 
-  window.location.href = data.init_point;
+  window.location.href =
+    data.init_point;
 };
 
 /**
- * INIT SAFE
+ * INIT
  */
-document.addEventListener("DOMContentLoaded", () => {
-  renderEvento();
-  renderEntradas();
-  actualizarTotal();
-});
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    renderEvento();
+
+    renderEntradas();
+
+    actualizarTotal();
+  }
+);
 
 </script>
 
