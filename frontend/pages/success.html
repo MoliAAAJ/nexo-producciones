@@ -60,13 +60,13 @@
     </h1>
 
     <p class="text-gray-400 mt-3 text-lg">
-      Tus tickets ya están listos
+      Tu ticket ya está listo
     </p>
 
   </div>
 
   <div id="estado" class="text-center text-yellow-400 text-xl mb-8">
-    Cargando tickets...
+    Cargando ticket...
   </div>
 
   <div id="eventoBox" class="hidden mb-10"></div>
@@ -149,7 +149,7 @@ async function cargarOrden() {
   for (let i = 0; i < 20; i++) {
 
     estado.innerHTML =
-      `🎟️ Generando tickets... (${i + 1}/20)`;
+      `🎟️ Generando ticket... (${i + 1}/20)`;
 
     try {
 
@@ -180,7 +180,7 @@ async function cargarOrden() {
   if (!data?.tickets?.length) {
 
     estado.innerHTML =
-      "❌ Tickets no generados";
+      "❌ Ticket no generado";
 
     return;
   }
@@ -189,11 +189,11 @@ async function cargarOrden() {
    * ✅ SUCCESS
    */
   estado.innerHTML =
-    "✅ Tickets generados correctamente";
+    "✅ Ticket generado correctamente";
 
   renderEvento(data.orden);
 
-  renderTickets(data.tickets);
+  renderTickets(data.tickets, data.orden);
 }
 
 /**
@@ -277,44 +277,57 @@ function renderEvento(orden) {
 /**
  * 🎫 TICKETS
  */
-function renderTickets(tickets) {
+function renderTickets(tickets, orden) {
 
   ticketsContainer.innerHTML = "";
 
-  tickets.forEach(t => {
+  const t = tickets[0];
 
-    const card =
-      document.createElement("div");
+  if (!t) return;
 
-    card.className =
-      "bg-gray-900 border border-white/10 rounded-3xl p-6 text-center";
+  const itemOrden =
+    orden.items?.find(
+      i => i.tipo === t.tipo
+    );
 
-    card.innerHTML = `
+  const cantidad =
+    itemOrden?.cantidad || 1;
 
-      <h3 class="text-2xl font-bold text-purple-400">
-        ${t.tipo}
-      </h3>
+  const card =
+    document.createElement("div");
 
-      <p class="text-gray-500 mt-2 text-sm break-all">
-        ID: ${t._id}
-      </p>
+  card.className =
+    "bg-gray-900 border border-white/10 rounded-3xl p-8 text-center max-w-xl mx-auto";
 
-      <img
-        src="${t.qr_code}"
-        class="w-52 h-52 mx-auto mt-6 bg-white p-3 rounded-2xl"
-      />
+  card.innerHTML = `
 
-      <button
-        onclick="descargarPDF('${t._id}')"
-        class="mt-6 w-full bg-purple-600 hover:bg-purple-700 transition py-4 rounded-2xl font-bold"
-      >
-        Descargar Ticket PDF
-      </button>
+    <h3 class="text-3xl font-bold text-purple-400">
+      ${t.tipo}
+    </h3>
 
-    `;
+    <p class="text-gray-400 mt-3">
+      ${cantidad} entrada(s)
+    </p>
 
-    ticketsContainer.appendChild(card);
-  });
+    <p class="text-gray-500 mt-2 text-sm break-all">
+      ID: ${t._id}
+    </p>
+
+    <img
+      src="${t.qr_code}"
+      class="w-56 h-56 mx-auto mt-8 bg-white p-3 rounded-2xl"
+    />
+
+    <button
+      onclick="descargarPDF('${t._id}')"
+      class="mt-8 w-full bg-purple-600 hover:bg-purple-700 transition py-4 rounded-2xl font-bold"
+    >
+      Descargar Ticket PDF
+    </button>
+
+  `;
+
+  ticketsContainer.appendChild(card);
 }
 
 /**

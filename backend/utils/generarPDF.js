@@ -90,7 +90,7 @@ export const generarPDF = (ticket, orden) => {
         startX,
         startY,
         500,
-        210,
+        300,
         18
       )
       .fill("#18181b");
@@ -98,7 +98,7 @@ export const generarPDF = (ticket, orden) => {
     doc.fillColor("white");
 
     /**
-     * Helpers
+     * HELPERS
      */
     const label = (txt, y, x = 75) => {
       doc
@@ -135,6 +135,13 @@ export const generarPDF = (ticket, orden) => {
         : "Horario a confirmar";
 
     /**
+     * 🔢 ITEM ORDEN
+     */
+    const itemOrden = orden.items?.find(
+      i => i.tipo === ticket.tipo
+    );
+
+    /**
      * 👤 ASISTENTE
      */
     label("ASISTENTE", startY + 18);
@@ -149,36 +156,59 @@ export const generarPDF = (ticket, orden) => {
      */
     label("ENTRADA", startY + 58);
 
-    value(ticket.tipo, startY + 58);
+    value(
+      ticket.tipo,
+      startY + 58
+    );
+
+    /**
+     * 🔢 CANTIDAD
+     */
+    label("CANTIDAD", startY + 98);
+
+    value(
+      `${itemOrden?.cantidad || 1} entrada(s)`,
+      startY + 98
+    );
+
+    /**
+     * 💰 TOTAL
+     */
+    label("TOTAL ABONADO", startY + 138);
+
+    value(
+      `$${orden.total || 0}`,
+      startY + 138
+    );
 
     /**
      * 📍 LUGAR
      */
-    label("LUGAR", startY + 98);
+    label("LUGAR", startY + 178);
 
     value(
       `${orden.evento_id?.lugar || "Lugar a confirmar"}`,
-      startY + 98
+      startY + 178
     );
 
     /**
      * 📌 DIRECCIÓN
      */
-    label("DIRECCIÓN", startY + 138);
+    label("DIRECCIÓN", startY + 218);
 
     value(
       `${orden.evento_id?.direccion || "Dirección a confirmar"}`,
-      startY + 138
+      startY + 218
     );
 
     /**
      * 🌎 LOCALIDAD
      */
-    label("LOCALIDAD", startY + 178);
+    label("LOCALIDAD", startY + 258);
 
     value(
       `${orden.evento_id?.localidad || "Localidad a confirmar"}`,
-      startY + 178
+      startY + 258
     );
 
     /**
@@ -206,7 +236,7 @@ export const generarPDF = (ticket, orden) => {
     /**
      * 🔥 QR SECTION
      */
-    doc.y = startY + 245;
+    doc.y = startY + 335;
 
     doc
       .fontSize(15)
@@ -227,7 +257,7 @@ export const generarPDF = (ticket, orden) => {
     /**
      * 🔳 QR
      */
-    const qrSize = 120;
+    const qrSize = 110;
 
     const qrX =
       (doc.page.width - qrSize) / 2;
@@ -245,7 +275,7 @@ export const generarPDF = (ticket, orden) => {
       }
     );
 
-    doc.y += 135;
+    doc.y += 125;
 
     /**
      * 🔑 CODE
@@ -273,7 +303,7 @@ export const generarPDF = (ticket, orden) => {
      */
     doc
       .font("Helvetica")
-      .fontSize(10)
+      .fontSize(9)
       .fillColor("#9ca3af")
       .text(
         "Presentarse con este ticket digital en el ingreso 15 minutos antes del comienzo del evento.",
@@ -288,7 +318,7 @@ export const generarPDF = (ticket, orden) => {
     doc.moveDown(0.3);
 
     doc
-      .fontSize(9)
+      .fontSize(8)
       .fillColor("#6b7280")
       .text(
         "NEXO Tickets • Powered by Mercado Pago",
