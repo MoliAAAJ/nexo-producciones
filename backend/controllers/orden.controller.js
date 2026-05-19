@@ -8,7 +8,7 @@ import { generarPDF } from "../utils/generarPDF.js";
 import { preferenceClient } from "../config/mp.js";
 
 /**
- * 🧾 CREAR ORDEN (PROTEGIDO)
+ * 🧾 CREAR ORDEN (FIX DEFINITIVO MP)
  */
 export const crearOrden = async (req, res) => {
   try {
@@ -21,25 +21,18 @@ export const crearOrden = async (req, res) => {
 
     console.log("📦 BODY:", req.body);
 
-    /**
-     * 🔥 VALIDACIÓN BÁSICA
-     */
     if (!evento_id || !items?.length) {
-      return res.status(400).json({
-        error: "Datos incompletos"
-      });
+      return res.status(400).json({ error: "Datos incompletos" });
     }
 
     const evento = await Evento.findById(evento_id);
 
     if (!evento) {
-      return res.status(404).json({
-        error: "Evento no encontrado"
-      });
+      return res.status(404).json({ error: "Evento no encontrado" });
     }
 
     /**
-     * 🚨 BLOQUEO POR ESTADO DEL EVENTO
+     * 🚨 BLOQUEO EVENTO
      */
     if (evento.estado !== "activo") {
       return res.status(400).json({
@@ -51,37 +44,29 @@ export const crearOrden = async (req, res) => {
     const itemsFinal = [];
 
     /**
-     * 🎟 VALIDACIÓN ITEMS
+     * 🎟 ITEMS VALIDATION
      */
     for (const item of items) {
       const cantidadNum = Number(item.cantidad || 1);
 
-      const tipo = String(item.tipo || "")
-        .trim()
-        .toLowerCase();
+      const tipo = String(item.tipo || "").trim().toLowerCase();
 
       const entrada = evento.entradas.find(
         (e) => e.tipo.trim().toLowerCase() === tipo
       );
 
       if (!entrada) {
-        return res.status(400).json({
-          error: "Entrada inválida"
-        });
+        return res.status(400).json({ error: "Entrada inválida" });
       }
 
       if (Number.isNaN(cantidadNum) || cantidadNum <= 0) {
-        return res.status(400).json({
-          error: "Cantidad inválida"
-        });
+        return res.status(400).json({ error: "Cantidad inválida" });
       }
 
       const stockDisponible = Number(entrada.stock || 0);
 
       if (stockDisponible < cantidadNum) {
-        return res.status(400).json({
-          error: "Stock insuficiente"
-        });
+        return res.status(400).json({ error: "Stock insuficiente" });
       }
 
       total += Number(entrada.precio) * cantidadNum;
@@ -94,18 +79,25 @@ export const crearOrden = async (req, res) => {
     }
 
     /**
-     * 💰 DESCUENTO SIMPLE (solo validación backend)
+     * 💰 DESCUENTO BACKEND
      */
     let descuento = 0;
 
-    if (codigo_descuento === "NEXO10") {
+    if ((codigo_descuento || "").trim().toUpperCase() === "NEXO10") {
       descuento = total * 0.10;
     }
 
-    const totalFinal = total - descuento;
+    /**
+     * 🔥 TOTAL FINAL REAL
+     */
+    const totalFinal = Math.round((total - descuento) * 100) / 100;
+
+    console.log("TOTAL BASE:", total);
+    console.log("DESCUENTO:", descuento);
+    console.log("TOTAL FINAL:", totalFinal);
 
     /**
-     * 🧾 CREAR ORDEN
+     * 🧾 ORDEN
      */
     const orden = await Orden.create({
       evento_id,
@@ -117,8 +109,6 @@ export const crearOrden = async (req, res) => {
       estado: "pendiente"
     });
 
-    console.log("🧾 ORDEN ID:", orden._id.toString());
-
     /**
      * 🌐 URLS
      */
@@ -126,7 +116,9 @@ export const crearOrden = async (req, res) => {
     const BACK = process.env.BASE_URL || "http://localhost:3000";
 
     /**
-     * 💳 MERCADOPAGO
+     * 💳 MERCADOPAGO (FIX CRÍTICO)
+     *
+     * 👉 SOLO 1 ITEM CON TOTAL FINAL
      */
     const preference = await preferenceClient.create({
       body: {
@@ -138,12 +130,15 @@ export const crearOrden = async (req, res) => {
             currency_id: "ARS"
           }
         ],
+
         notification_url: `${BACK}/mp/webhook`,
+
         back_urls: {
           success: `${FRONT}/pages/success.html?orden_id=${orden._id}`,
           failure: `${FRONT}/payments/fail.html`,
           pending: `${FRONT}/payments/pending.html`
         },
+
         auto_return: "approved",
         external_reference: orden._id.toString()
       }

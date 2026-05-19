@@ -24,15 +24,20 @@
 
 <header class="sticky top-0 z-50 bg-black/70 backdrop-blur border-b border-white/10">
 
-  <div class="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
+  <div class="max-w-7xl mx-auto px-5 py-4 grid grid-cols-3 items-center">
 
-    <img src="/assets/images/branding/nexo_logo_transparente.png" class="h-24 w-auto"/>
+    <!-- IZQUIERDA -->
+    <img src="/assets/images/branding/nexo_logo_transparente.png" class="h-14 w-auto justify-self-start"/>
 
-    <button onclick="abrirFAQ()" class="bg-purple-600 hover:bg-purple-700 px-5 py-2 rounded-xl text-sm font-semibold">
-      Ayuda
-    </button>
+    <!-- CENTRO -->
+    <div class="justify-self-center">
+      <button onclick="abrirFAQ()" class="bg-purple-600 hover:bg-purple-700 px-5 py-2 rounded-xl text-sm font-semibold">
+        Ayuda
+      </button>
+    </div>
 
-    <h1 class="text-xl font-extrabold text-purple-400">
+    <!-- DERECHA -->
+    <h1 class="justify-self-end text-xl font-extrabold text-purple-400">
       NEXO <span class="text-white">Tickets</span>
     </h1>
 
@@ -50,17 +55,18 @@
   © 2026 NEXO Tickets
 </footer>
 
+<!-- 🧠 MODAL GLOBAL DE AYUDA -->
 <div id="faqModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 px-5">
 
   <div class="bg-gray-900 rounded-3xl border border-white/10 max-w-2xl w-full p-8 relative">
 
     <button onclick="cerrarFAQ()" class="absolute top-4 right-4 text-2xl text-gray-400">×</button>
 
-    <h2 class="text-3xl font-bold text-purple-400 mb-6">FAQ</h2>
+    <h2 class="text-3xl font-bold text-purple-400 mb-6">
+      Ayuda
+    </h2>
 
-    <p class="text-gray-300">
-      Información del evento y compra de entradas.
-    </p>
+    <div id="faqContent" class="text-gray-300 space-y-3"></div>
 
   </div>
 
@@ -72,10 +78,43 @@ const evento = JSON.parse(localStorage.getItem("evento"));
 const container = document.getElementById("container");
 
 /**
- * 🔥 IMAGEN SAFE
+ * 🧠 HELP SYSTEM GLOBAL
+ */
+const HELP = {
+
+  evento: `
+    <p>🎟️ Estás en la página del evento.</p>
+    <ul>
+      <li>Seleccioná “Quiero asistir” para comprar</li>
+      <li>El stock es limitado</li>
+      <li>Si el evento está cerrado o finalizado no podrás comprar</li>
+    </ul>
+  `,
+
+  index: `
+    <p>📅 Lista de eventos disponibles.</p>
+    <ul>
+      <li>Ver eventos activos y futuros</li>
+      <li>Eventos finalizados no permiten compra</li>
+      <li>Click en un evento para entrar</li>
+    </ul>
+  `,
+
+  checkout: `
+    <p>💳 Estás en el checkout.</p>
+    <ul>
+      <li>Completá tus datos personales</li>
+      <li>Podés usar código de descuento</li>
+      <li>Serás redirigido a MercadoPago</li>
+    </ul>
+  `
+};
+
+/**
+ * 🖼️ IMAGEN SAFE
  */
 function fixImage(path) {
-  if (!path) return "/assets/images/events/1.jpg";
+  if (!path) return "/assets/images/events/nexo_back.jpg";
   if (path.startsWith("http")) return path;
   if (path.startsWith("/assets")) return path;
   return "/assets/images/events/" + path;
@@ -91,6 +130,9 @@ function estadoEvento(evento) {
   return "activo";
 }
 
+/**
+ * 🚨 RENDER
+ */
 if (!evento) {
 
   container.innerHTML = `
@@ -204,6 +246,9 @@ if (!evento) {
   `;
 }
 
+/**
+ * 🎟️ COMPRA
+ */
 function comprar() {
 
   const entrada = evento?.entradas?.[0];
@@ -219,13 +264,28 @@ function comprar() {
   window.location.href = "/pages/checkout.html";
 }
 
-function abrirFAQ(){
+/**
+ * 🧠 HELP SYSTEM
+ */
+function abrirFAQ() {
+
+  const path = window.location.pathname;
+
+  let page = "evento";
+
+  if (path.includes("index")) page = "index";
+  if (path.includes("checkout")) page = "checkout";
+
+  document.getElementById("faqContent").innerHTML =
+    HELP[page] || HELP.evento;
+
   const modal = document.getElementById("faqModal");
   modal.classList.remove("hidden");
   modal.classList.add("flex");
 }
 
-function cerrarFAQ(){
+function cerrarFAQ() {
+
   const modal = document.getElementById("faqModal");
   modal.classList.add("hidden");
   modal.classList.remove("flex");

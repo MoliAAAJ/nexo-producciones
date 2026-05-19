@@ -17,56 +17,96 @@
     * { font-family: 'Inter', sans-serif; }
     html { scroll-behavior: smooth; }
     body { background: #0f0f12; }
-
-    .evento-card:hover img {
-      transform: scale(1.05);
-    }
   </style>
 
 </head>
 
-<body class="text-white min-h-screen flex flex-col">
+<header class="sticky top-0 z-50 bg-black/70 backdrop-blur border-b border-white/10">
 
-  <header class="sticky top-0 z-50 bg-black/70 backdrop-blur border-b border-white/10">
+  <div class="max-w-7xl mx-auto px-5 py-4 grid grid-cols-3 items-center">
 
-    <div class="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
+    <!-- IZQUIERDA -->
+    <img src="/assets/images/branding/nexo_logo_transparente.png" class="h-14 w-auto justify-self-start"/>
 
-      <!-- FIX IMAGEN LOGO -->
-      <img src="/assets/images/branding/nexo_logo_transparente.png" class="h-16 w-auto" />
-
-      <h1 class="text-xl font-extrabold text-purple-400">
-        NEXO <span class="text-white">Tickets</span>
-      </h1>
-
+    <!-- CENTRO -->
+    <div class="justify-self-center">
+      <button onclick="abrirFAQ()" class="bg-purple-600 hover:bg-purple-700 px-5 py-2 rounded-xl text-sm font-semibold">
+        Ayuda
+      </button>
     </div>
 
-  </header>
+    <!-- DERECHA -->
+    <h1 class="justify-self-end text-xl font-extrabold text-purple-400">
+      NEXO <span class="text-white">Tickets</span>
+    </h1>
 
-  <section class="max-w-7xl mx-auto px-5 py-10">
+  </div>
 
-    <h2 class="text-4xl font-bold mb-6">Próximos eventos</h2>
+</header>
 
-    <p id="cantidadEventos" class="text-gray-400 mb-6"></p>
+<section class="max-w-7xl mx-auto px-5 py-10">
 
-    <div id="eventosContainer" class="grid md:grid-cols-2 xl:grid-cols-3 gap-8"></div>
+  <!-- HERO -->
+  <div class="mb-10 text-center">
+    <h1 class="text-5xl md:text-6xl font-extrabold text-white leading-tight">
+      Bienvenido a <span class="text-purple-400">NEXO Tickets</span>
+    </h1>
 
-  </section>
+    <p class="text-gray-400 text-lg mt-4">
+      Boletería virtual para eventos, fiestas y espectáculos artísticos
+    </p>
+  </div>
+
+  <h2 class="text-4xl font-bold mb-6 text-white">
+    Próximos eventos
+  </h2>
+
+  <p id="cantidadEventos" class="text-gray-400 mb-6"></p>
+
+  <div id="eventosContainer" class="grid md:grid-cols-2 xl:grid-cols-3 gap-8"></div>
+
+</section>
+
+<!-- FAQ -->
+<div id="faqModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 px-5">
+
+  <div class="bg-gray-900 rounded-3xl border border-white/10 max-w-2xl w-full p-8 relative">
+
+    <button onclick="cerrarFAQ()" class="absolute top-4 right-4 text-2xl text-gray-400">×</button>
+
+    <h2 class="text-3xl font-bold text-purple-400 mb-6">Ayuda</h2>
+
+    <p class="text-gray-300">
+      En esta pantalla ves todos los eventos disponibles.<br><br>
+      👉 Tocá “Ver evento” para entrar o comprar entradas.<br>
+      📌 Los eventos finalizados siguen visibles para consulta.
+    </p>
+
+  </div>
+
+</div>
 
 <script>
 
 const API = window.location.origin;
 let eventos = [];
 
-/**
- * 🧠 EVENTO FINALIZADO POR FECHA
- */
+function abrirFAQ(){
+  const m = document.getElementById("faqModal");
+  m.classList.remove("hidden");
+  m.classList.add("flex");
+}
+
+function cerrarFAQ(){
+  const m = document.getElementById("faqModal");
+  m.classList.add("hidden");
+  m.classList.remove("flex");
+}
+
 function eventoFinalizado(ev) {
   return new Date(ev.fecha).getTime() < Date.now();
 }
 
-/**
- * 🧠 ESTADO REAL DEL EVENTO
- */
 function estadoEvento(ev) {
 
   if (ev.estado === "cerrado") return "cerrado";
@@ -77,79 +117,13 @@ function estadoEvento(ev) {
   return "activo";
 }
 
-/**
- * 🎨 BADGE UI
- */
-function badge(estado) {
-
-  const map = {
-    activo: "bg-green-600/20 text-green-300",
-    finalizado: "bg-gray-700/30 text-gray-400",
-    cerrado: "bg-red-600/20 text-red-300",
-    agotado: "bg-yellow-600/20 text-yellow-300"
-  };
-
-  const text = {
-    activo: "Activo",
-    finalizado: "Finalizado",
-    cerrado: "Cerrado",
-    agotado: "Agotado"
-  };
-
-  return `
-    <span class="${map[estado] || map.finalizado} px-3 py-1 rounded-full text-xs font-bold">
-      ${text[estado] || "Finalizado"}
-    </span>
-  `;
-}
-
-/**
- * 🖼️ IMAGEN SAFE
- */
-function getImage(img) {
-
-  if (!img) return "/assets/images/events/nexo_back.jpg";
-  if (img.startsWith("http")) return img;
-  if (img.startsWith("/assets")) return img;
-
-  return `/assets/images/events/${img}`;
-}
-
-/**
- * 📡 CARGAR EVENTOS
- */
 async function cargarEventos() {
 
-  try {
-
-    const res = await fetch(`${API}/eventos`);
-    let data = await res.json();
-
-    /**
-     * 🔥 ORDEN: activos primero
-     */
-    data.sort((a, b) => {
-
-      const aState = estadoEvento(a) === "activo" ? 0 : 1;
-      const bState = estadoEvento(b) === "activo" ? 0 : 1;
-
-      return aState - bState;
-    });
-
-    eventos = data;
-
-    render(eventos);
-
-  } catch (err) {
-
-    document.getElementById("eventosContainer").innerHTML =
-      `<p class="text-red-400">Error cargando eventos</p>`;
-  }
+  const res = await fetch(`${API}/eventos`);
+  eventos = await res.json();
+  render(eventos);
 }
 
-/**
- * 🎯 RENDER PRINCIPAL
- */
 function render(lista) {
 
   const cont = document.getElementById("eventosContainer");
@@ -162,73 +136,39 @@ function render(lista) {
   lista.forEach(ev => {
 
     const estado = estadoEvento(ev);
-    const img = getImage(ev.imagen);
-
-    let textoBtn = "";
-    let claseBtn = "";
-
-    if (estado === "activo") {
-
-      textoBtn = "Ver evento";
-      claseBtn = "bg-purple-600 hover:bg-purple-700";
-
-    } else if (estado === "finalizado") {
-
-      textoBtn = "Ver evento";
-      claseBtn = "bg-gray-700 text-gray-300";
-
-    } else if (estado === "cerrado") {
-
-      textoBtn = "Ventas cerradas";
-      claseBtn = "bg-red-600/30 text-red-300";
-
-    } else if (estado === "agotado") {
-
-      textoBtn = "Agotado";
-      claseBtn = "bg-yellow-600/30 text-yellow-300";
-    }
 
     cont.innerHTML += `
-      <div class="bg-gray-900 rounded-3xl overflow-hidden border border-white/10 hover:scale-[1.02] transition">
+      <div class="bg-gray-900 rounded-3xl overflow-hidden border border-white/10">
 
-        <img src="${img}" class="w-full h-64 object-cover"/>
+        <img src="/assets/images/events/${ev.imagen}" class="w-full h-64 object-cover"/>
 
         <div class="p-5">
 
-          <div class="flex justify-between items-center">
-            <h3 class="text-2xl font-bold text-purple-300">
-              ${ev.nombre}
-            </h3>
-
-            ${badge(estado)}
-          </div>
+          <h3 class="text-2xl font-bold text-purple-300">
+            ${ev.nombre}
+          </h3>
 
           <p class="text-gray-400 mt-2">
-            📍 ${ev.localidad || ""}
+            ${ev.localidad || ""}
           </p>
 
           <button
             onclick='verEvento("${ev._id}")'
-            class="mt-5 w-full ${claseBtn} py-3 rounded-xl font-bold transition"
+            class="mt-5 w-full bg-purple-600 py-3 rounded-xl font-bold"
           >
-            ${textoBtn}
+            Ver evento
           </button>
 
         </div>
 
       </div>
     `;
-
   });
 }
 
-/**
- * 📦 IR A EVENTO (SIEMPRE PERMITIDO)
- */
 function verEvento(id) {
 
   const evento = eventos.find(e => e._id === id);
-
   localStorage.setItem("evento", JSON.stringify(evento));
 
   window.location.href = "/pages/evento.html";
