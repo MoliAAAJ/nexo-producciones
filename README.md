@@ -240,7 +240,7 @@ npm start
 
 ## 📬 Contacto
 
-Para dudas o mejoras, me podes enviar una mail a moliaaaj@gmail.com.
+Para dudas o mejoras, me podes enviar un mail a moliaaaj@gmail.com.
 
 
 [Ngrok Official Website](https://ngrok.com?utm_source=chatgpt.com)
