@@ -7,7 +7,7 @@ import {
 
 const router = express.Router();
 
-// endpoint compra
+// ENDPOINTS COMPRA
 router.post("/", crearOrden);
 router.get("/:id", obtenerOrden);
 

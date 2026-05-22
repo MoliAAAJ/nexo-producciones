@@ -16,7 +16,7 @@ export const connectDB = async () => {
   }
 };
 
-// 📡 Eventos de conexión (MUY importante)
+// 📡 Eventos de conexión
 mongoose.connection.on("disconnected", () => {
   console.warn("⚠️ MongoDB desconectado");
 });

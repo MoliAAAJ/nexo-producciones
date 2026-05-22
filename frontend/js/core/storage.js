@@ -53,7 +53,7 @@ export const Storage = {
   },
 
   /**
-   * 🧹 CLEAR específico (opcional útil)
+   * 🧹 CLEAR específico
    */
   clear() {
     localStorage.clear();

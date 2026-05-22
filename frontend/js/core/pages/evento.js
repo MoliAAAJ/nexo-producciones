@@ -144,7 +144,7 @@ function renderEvento(container, evento) {
 }
 
 /**
- * 🔗 ACTIONS
+ * 🔗 ACCIONES DE COMPRA
  */
 function bindActions(evento) {
 

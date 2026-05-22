@@ -41,7 +41,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend")));
 
 /**
- * 🖼️ ASSETS (OBLIGATORIO PARA IMÁGENES)
+ * 🖼️ ASSETS PARA IMÁGENES
  */
 app.use(
   "/assets",

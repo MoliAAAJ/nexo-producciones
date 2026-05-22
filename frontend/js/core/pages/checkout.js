@@ -5,7 +5,7 @@ import { crearOrden } from "../core/api.js";
 import { $, money } from "../core/utils.js";
 
 /**
- * 🎯 INIT CHECKOUT PAGE
+ * 🎯 INICIAR PÁGINA DE CHECKOUT
  */
 export function initCheckoutPage() {
 
@@ -24,7 +24,7 @@ export function initCheckoutPage() {
   const precio = Number(entrada?.precio || 0);
 
   /**
-   * 🧠 IMAGE SAFE
+   * 🧠 IMAGEN SAFE
    */
   const imagen = getImagen(evento);
 
@@ -125,7 +125,7 @@ export function initCheckoutPage() {
 
   /**
    * =========================
-   * EVENTS
+   * EVENTOS
    * =========================
    */
   function bindEvents() {

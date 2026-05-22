@@ -8,7 +8,7 @@ import { generarPDF } from "../utils/generarPDF.js";
 import { preferenceClient } from "../config/mp.js";
 
 /**
- * 🧾 CREAR ORDEN (FIX DEFINITIVO MP)
+ * 🧾 CREAR ORDEN
  */
 export const crearOrden = async (req, res) => {
   try {
@@ -44,7 +44,7 @@ export const crearOrden = async (req, res) => {
     const itemsFinal = [];
 
     /**
-     * 🎟 ITEMS VALIDATION
+     * VALIDACIÓN DE ENTRADAS Y STOCK
      */
     for (const item of items) {
       const cantidadNum = Number(item.cantidad || 1);
@@ -116,7 +116,7 @@ export const crearOrden = async (req, res) => {
     const BACK = process.env.BASE_URL || "http://localhost:3000";
 
     /**
-     * 💳 MERCADOPAGO (FIX CRÍTICO)
+     * 💳 MERCADOPAGO
      *
      * 👉 SOLO 1 ITEM CON TOTAL FINAL
      */

@@ -1,4 +1,4 @@
-// navbar.js - componente global NEXO
+// COMPONENTE NAVBAR GLOBAL
 
 function renderNavbar() {
   const navbarHTML = `
@@ -38,5 +38,5 @@ function renderNavbar() {
   }
 }
 
-// auto-ejecutar
+// AUTO-EJECUTAR RENDERIZADO AL CARGAR LA PÁGINA
 document.addEventListener("DOMContentLoaded", renderNavbar);

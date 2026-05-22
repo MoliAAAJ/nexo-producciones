@@ -83,7 +83,7 @@ const eventoSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// 🔎 Índices útiles
+// 🔎 ÍNDICES ÚTILES
 eventoSchema.index({ fecha: 1 });
 eventoSchema.index({ estado: 1 });
 

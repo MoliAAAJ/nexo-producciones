@@ -22,7 +22,7 @@ export const enviarTicketsEmail = async ({
     });
 
     /**
-     * ✅ Verificar Gmail
+     * ✅ VERIFICAR GMAIL
      */
     await transporter.verify();
 

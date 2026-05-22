@@ -1,4 +1,4 @@
-// modal.js - sistema global de modales NEXO
+// SISTEMA GLOBAL DE MODALES
 
 export function abrirModal(id) {
   const modal = document.getElementById(id);
@@ -16,7 +16,7 @@ export function cerrarModal(id) {
   modal.classList.remove("flex");
 }
 
-// helpers globales para compatibilidad con HTML viejo
+// COMPATIBILIDAD GLOBAL PARA MODALES (HTML VIEJOS)
 window.abrirModal = function () {
   const modal = document.getElementById("modalAyuda") || document.getElementById("faqModal");
   if (!modal) return;

@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * 🏠 INDEX PAGE LOGIC
+ * 🏠 INDEX LOGIC
  * Home con blindaje de imágenes y datos
  */
 
@@ -48,7 +48,7 @@ async function cargarEventos() {
 }
 
 /**
- * 🧠 NORMALIZAR IMAGEN (BLINDADO)
+ * 🧠 NORMALIZAR IMAGEN
  */
 function getImagen(ev) {
   const img = ev.imagen;
@@ -132,7 +132,7 @@ function render(lista) {
 }
 
 /**
- * 🔍 FILTRO CATEGORÍAS (FUTURO)
+ * 🔍 FILTRO CATEGORÍAS
  */
 window.filtrarCategoria = function (cat) {
   categoriaActual = cat;

@@ -2,7 +2,7 @@ const API =
   window.location.origin;
 
 /**
- * Helper seguro para fetch
+ * HELPER PARA HACER REQUESTS A LA API
  */
 async function request(url, options = {}) {
 
@@ -43,7 +43,7 @@ export async function crearOrden(data) {
 }
 
 /**
- * ADMIN (opcional pero ya te lo dejo listo)
+ * ADMIN
  */
 export async function getDashboard() {
   return request(`${API}/api/admin/dashboard`);
