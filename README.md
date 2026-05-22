@@ -1,31 +1,30 @@
 # 🎟️ NEXO Producciones
 
-Sistema de venta de entradas online con:
+Sistema de venta de entradas online con frontend estático, backend en Node.js/Express, base de datos MongoDB y pasarela de pago MercadoPago.
 
-- MercadoPago Checkout PRO
-- Generación automática de tickets QR
-- PDFs descargables
-- Envío de tickets por email
-- Listado PDF de compradores
-- Frontend HTML + Tailwind
-- Backend Node.js + Express + MongoDB
+## Características principales
+- Checkout con MercadoPago Checkout PRO
+- Creación automática de órdenes y tickets
+- Generación de tickets QR y PDF
+- Envío de ticket por email tras el pago
+- Panel administrativo con métricas y filtros
+- Exportación de listado PDF de compradores por evento
+- Validación de tickets desde API
 
 ---
 
-# 🚀 STACK
+## 🚀 Tecnologías
 
-## Frontend
+### Frontend
 - HTML5
 - CSS3
 - JavaScript Vanilla
-- TailwindCSS CDN
+- Tailwind CSS (CDN)
 
-## Backend
+### Backend
 - Node.js
 - Express
 - MongoDB + Mongoose
-
-## Integraciones
 - MercadoPago SDK
 - Nodemailer
 - QRCode
@@ -33,123 +32,100 @@ Sistema de venta de entradas online con:
 
 ---
 
-# 📦 DEPENDENCIAS
-
-## Backend
-
-Instalar dentro de:
-
-```bash
-/backend
-```
-
-### Dependencias principales
-
-```bash
-npm install express mongoose cors dotenv mercadopago qrcode pdfkit nodemailer
-```
-
-### Dependencias dev
-
-```bash
-npm install -D nodemon
-```
-
----
-
-# 📂 ESTRUCTURA
+## 📁 Estructura del proyecto
 
 ```txt
 nexo-producciones/
-│
-├── frontend/
-│   ├── index.html
-│   ├── evento.html
-│   ├── checkout.html
-│   ├── success.html
-│   ├── pending.html
-│   ├── fail.html
-│   ├── scanner.html
-│   ├── script.js
-│   ├── style.css
-│   └── imagenes/
-│
 ├── backend/
-│   ├── config/
-│   ├── controllers/
-│   ├── models/
-│   ├── routes/
-│   ├── utils/
 │   ├── assets/
-│   │   └── nexo_logo_transparente.png
-│   ├── .env
+│   ├── config/
+│   │   ├── db.js
+│   │   └── mp.js
+│   ├── controllers/
+│   │   └── orden.controller.js
+│   ├── models/
+│   │   ├── Evento.js
+│   │   ├── Orden.js
+│   │   └── Ticket.js
+│   ├── routes/
+│   │   ├── admin.routes.js
+│   │   ├── mp.routes.js
+│   │   ├── orden.routes.js
+│   │   ├── reportes.routes.js
+│   │   └── ticket.routes.js
+│   ├── utils/
+│   │   ├── enviarTicketsEmail.js
+│   │   ├── generarPDF.js
+│   │   └── generarQR.js
 │   ├── package.json
 │   └── server.js
-│
+├── frontend/
+│   ├── admin/
+│   ├── components/
+│   ├── js/
+│   │   ├── core/
+│   │   └── pages/
+│   ├── pages/
+│   ├── payments/
+│   ├── public/
+│   │   └── assets/
+│   └── styles/
 └── README.md
 ```
 
 ---
 
-# ⚙️ VARIABLES DE ENTORNO
+## ⚙️ Instalación y configuración
 
-Crear:
+1. Clona el repositorio:
 
 ```bash
-/backend/.env
+git clone <repo-url>
 ```
 
-Contenido:
+2. Entra al backend:
+
+```bash
+cd ../nexo-producciones/backend
+```
+
+3. Instala dependencias:
+
+```bash
+npm install
+```
+
+4. Crea el archivo `.env` con estas variables:
 
 ```env
 PORT=3000
-
 MONGO_URI=mongodb://127.0.0.1:27017/nexo
-
 BASE_URL=http://localhost:3000
 FRONT_URL=http://localhost:3000
-
 MERCADOPAGO_ACCESS_TOKEN=TEST-XXXXXXXX
-
 EMAIL_USER=tucorreo@gmail.com
 EMAIL_PASS=xxxxxxxx
 ```
 
----
+> Usa credenciales válidas de MercadoPago y Gmail para pruebas. Si usas Gmail, habilita el acceso seguro o App Password si estás con 2FA.
 
-# 🟢 MONGODB
-
-Instalar MongoDB Community Edition.
-
-## Linux
+5. Asegúrate de que MongoDB esté corriendo:
 
 ```bash
 sudo systemctl start mongod
 ```
 
-Verificar:
-
-```bash
-mongosh
-```
-
 ---
 
-# ▶️ EJECUTAR BACKEND
+## ▶️ Ejecución
 
-Dentro de:
-
-```bash
-/backend
-```
-
-## Desarrollo
+Desde la carpeta `backend`:
 
 ```bash
 npm run dev
 ```
 
-## Producción
+o en producción:
 
 ```bash
 npm start
@@ -157,47 +133,115 @@ npm start
 
 ---
 
-# 📜 package.json
+## 🌐 Rutas principales
+
+### Rutas públicas
+- `GET /eventos` — lista eventos activos
+- `GET /*` — sirve el frontend estático
+
+### API de ordenes
+- `POST /api/orden` — crea una orden y genera preference de MercadoPago
+- `GET /api/orden/:id` — obtiene orden y tickets asociados
+- `GET /api/orden/ticket/:id/pdf` — descarga ticket en PDF
+
+### Webhook de MercadoPago
+- `POST /mp/webhook` — recibe notificaciones de pago, marca la orden como `pagado`, genera tickets y dispara el email
+
+### Validación de tickets
+- `POST /api/ticket/validar` — marca ticket como usado si es válido
+- `GET /api/ticket/:id/pdf` — descarga PDF del ticket
+
+### Panel administrativo
+- `GET /api/admin/dashboard` — métricas generales
+- `GET /api/admin/tickets?usados=false|true` — lista de tickets filtrados
+- `GET /api/admin/eventos` — estadísticas por evento
+
+### Reportes
+- `GET /api/reportes/eventos/:id/pdf` — exporta listado de compradores de un evento en PDF
+
+---
+
+## 🧾 Modelos de datos
+
+### Evento
+- `nombre`, `descripcion`, `fecha`, `lugar`, `direccion`, `localidad`, `imagen`, `estado`
+- `entradas`: array con `tipo`, `precio`, `stock`
+
+### Orden
+- `evento_id` (referencia a Evento)
+- `cliente`: `nombre`, `apellido`, `dni`, `email`
+- `items`: `tipo`, `cantidad`, `precio_unitario`
+- `total`, `descuento`, `codigo_descuento`, `estado`
+
+### Ticket
+- `orden_id`, `evento_id`
+- `tipo`
+- `qr_code`
+- `usado`
+
+---
+
+## 🔧 Flujos importantes
+
+### Compra normal
+1. El frontend carga eventos desde `GET /eventos`.
+2. El usuario elige evento, completa datos y crea orden.
+3. Backend crea orden en Mongo y genera preference en MercadoPago.
+4. El usuario paga en MercadoPago y regresa a la app.
+5. MercadoPago envía webhook a `/mp/webhook`.
+6. Backend marca orden como pagada, crea tickets y envía email con el PDF.
+
+### Validación de ticket
+1. El scanner o admin envía `ticketId` a `POST /api/ticket/validar`.
+2. Si el ticket existe y no fue usado, se marca como usado.
+
+---
+
+## 📌 Notas
+
+- El frontend es estático y se sirve desde `backend/server.js`.
+- El archivo `frontend/public/assets/images/branding/nexo_logo_transparente.png` se usa en PDFs.
+- El email envía un enlace a `BASE_URL/api/orden/ticket/:id/pdf` para descargar el ticket.
+- Si necesitas pruebas de webhook en desarrollo, usa `ngrok` o una solución similar.
+
+---
+
+## 🧪 Observaciones adicionales
+
+- El descuento fijo propuesto es `NEXO10` y aplica 10% en backend.
+- El sistema guarda órdenes en estado `pendiente` y solo genera tickets cuando MercadoPago confirma el pago.
+- El backend usa `express.static` para servir `frontend` y `frontend/public/assets`.
+
+---
+
+## 📦 Dependencias clave
 
 ```json
 {
-  "name": "nexo-backend",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "server.js",
-  "scripts": {
-    "dev": "nodemon server.js",
-    "start": "node server.js"
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.2",
+    "helmet": "^8.1.0",
+    "mercadopago": "^2.12.0",
+    "mongodb": "^7.1.1",
+    "mongoose": "^8.23.1",
+    "nodemailer": "^8.0.7",
+    "pdfkit": "^0.18.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }
 ```
 
 ---
 
-# 💳 MERCADOPAGO
+## 📬 Contacto
 
-## Credenciales
+Para dudas o mejoras, me podes enviar una mail a moliaaaj@gmail.com.
 
-Obtener desde:
-
-[Mercado Pago Developers](https://www.mercadopago.com.ar/developers/panel?utm_source=chatgpt.com)
-
-Usar:
-
-- ACCESS TOKEN TEST
-- Luego producción
-
----
-
-# 🌐 WEBHOOKS EN LOCALHOST
-
-MercadoPago NO puede acceder a localhost.
-
-Necesitás usar:
-
-## NGROK
-
-Instalar:
 
 [Ngrok Official Website](https://ngrok.com?utm_source=chatgpt.com)
 
@@ -352,7 +396,7 @@ http://localhost:3000/eventos
 
 # 👨‍💻 AUTOR
 
-Proyecto desarrollado para:
+Proyecto desarrollado por José Luis Moliterno
 
 ## NEXO Producciones
 
