@@ -7,6 +7,7 @@ import {
   Payment
 } from "mercadopago";
 
+import Evento from "../models/Evento.js";
 import Orden from "../models/Orden.js";
 import Ticket from "../models/Ticket.js";
 
@@ -125,6 +126,47 @@ router.post("/webhook", async (req, res) => {
       console.log("⚠ Pago no aprobado");
       return res.sendStatus(200);
     }
+
+    /**
+     * 📉 DESCONTAR STOCK
+     */
+    const eventoId =
+      typeof orden.evento_id === "string"
+        ? orden.evento_id
+        : orden.evento_id?._id;
+
+    const evento = await Evento.findById(eventoId);
+
+    if (!evento) {
+      console.log("❌ Evento no encontrado para descontar stock");
+      return res.sendStatus(200);
+    }
+
+    for (const item of orden.items) {
+      const tipo = String(item.tipo || "")
+        .trim()
+        .toLowerCase();
+
+      const entrada = evento.entradas.find(
+        e => e.tipo.trim().toLowerCase() === tipo
+      );
+
+      if (!entrada) {
+        console.log(`❌ Entrada no encontrada: ${item.tipo}`);
+        return res.sendStatus(500);
+      }
+
+      const cantidad = Number(item.cantidad || 1);
+
+      if (Number(entrada.stock || 0) < cantidad) {
+        console.log(`❌ Stock insuficiente para ${item.tipo}`);
+        return res.sendStatus(500);
+      }
+
+      entrada.stock -= cantidad;
+    }
+
+    await evento.save();
 
     /**
      * ✅ MARCAR PAGADO

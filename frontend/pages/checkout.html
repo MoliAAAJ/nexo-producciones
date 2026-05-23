@@ -97,6 +97,12 @@
       />
 
       <input
+        id="telefono"
+        placeholder="Teléfono"
+        class="w-full mb-4 bg-black/40 p-4 rounded-xl"
+      />
+
+      <input
         id="email"
         type="email"
         placeholder="Email"
@@ -572,6 +578,9 @@ window.continuarPago = async function () {
   const dni =
     document.getElementById("dni").value.trim();
 
+  const telefono =
+    document.getElementById("telefono").value.trim();
+
   const email =
     document.getElementById("email").value.trim();
 
@@ -592,7 +601,13 @@ window.continuarPago = async function () {
   /**
    * VALIDAR CAMPOS
    */
-  if (!nombre || !apellido || !dni || !email) {
+  if (
+    !nombre ||
+    !apellido ||
+    !dni ||
+    !telefono ||
+    !email
+  ) {
 
     return alert(
       "Completa todos los campos"
@@ -650,6 +665,7 @@ window.continuarPago = async function () {
           nombre,
           apellido,
           dni,
+          telefono,
           email
         },
 

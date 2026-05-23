@@ -70,6 +70,7 @@ router.get("/tickets", async (req, res) => {
     const tickets = await Ticket
       .find(filter)
       .populate("evento_id")
+      .populate("orden_id")
       .sort({ createdAt: -1 });
 
     res.json({

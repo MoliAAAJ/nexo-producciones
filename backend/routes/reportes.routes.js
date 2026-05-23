@@ -71,6 +71,7 @@ router.get("/eventos/:id/pdf", async (req, res) => {
       );
 
       doc.text(`DNI: ${o.cliente.dni}`);
+      doc.text(`Teléfono: ${o.cliente.telefono || "No informado"}`);
       doc.text(`Email: ${o.cliente.email}`);
       doc.text(`Entradas: ${totalEntradas}`);
 

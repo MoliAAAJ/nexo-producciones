@@ -90,7 +90,7 @@ export const generarPDF = (ticket, orden) => {
         startX,
         startY,
         500,
-        300,
+        340,
         18
       )
       .fill("#18181b");
@@ -152,63 +152,73 @@ export const generarPDF = (ticket, orden) => {
     );
 
     /**
+     * 📞 TELÉFONO
+     */
+    label("TELÉFONO", startY + 58);
+
+    value(
+      `${orden.cliente.telefono || "No informado"}`,
+      startY + 58
+    );
+
+    /**
      * 🎟️ ENTRADA
      */
-    label("ENTRADA", startY + 58);
+    label("ENTRADA", startY + 98);
 
     value(
       ticket.tipo,
-      startY + 58
+      startY + 98
     );
 
     /**
      * 🔢 CANTIDAD
      */
-    label("CANTIDAD", startY + 98);
+    label("CANTIDAD", startY + 138);
 
     value(
       `${itemOrden?.cantidad || 1} entrada(s)`,
-      startY + 98
+      startY + 138
     );
 
     /**
      * 💰 TOTAL
      */
-    label("TOTAL ABONADO", startY + 138);
+    label("TOTAL ABONADO", startY + 178);
 
     value(
       `$${orden.total || 0}`,
-      startY + 138
+      startY + 178
     );
 
     /**
      * 📍 LUGAR
      */
-    label("LUGAR", startY + 178);
+    label("LUGAR", startY + 218);
 
     value(
       `${orden.evento_id?.lugar || "Lugar a confirmar"}`,
-      startY + 178
+      startY + 218
     );
 
     /**
      * 📌 DIRECCIÓN
      */
-    label("DIRECCIÓN", startY + 218);
+    label("DIRECCIÓN", startY + 258);
 
     value(
       `${orden.evento_id?.direccion || "Dirección a confirmar"}`,
-      startY + 218
+      startY + 258
     );
 
     /**
      * 🌎 LOCALIDAD
      */
-    label("LOCALIDAD", startY + 258);
+    label("LOCALIDAD", startY + 298);
 
     value(
       `${orden.evento_id?.localidad || "Localidad a confirmar"}`,
-      startY + 258
+      startY + 298
     );
 
     /**
@@ -225,18 +235,18 @@ export const generarPDF = (ticket, orden) => {
     /**
      * 🕒 HORA
      */
-    label("HORA", startY + 58, 360);
+    label("HORA", startY + 98, 360);
 
     value(
       `${horaEvento} hs`,
-      startY + 58,
+      startY + 98,
       360
     );
 
     /**
      * 🔥 QR SECTION
      */
-    doc.y = startY + 335;
+    doc.y = startY + 375;
 
     doc
       .fontSize(15)
@@ -276,27 +286,6 @@ export const generarPDF = (ticket, orden) => {
     );
 
     doc.y += 125;
-
-    /**
-     * 🔑 CODE
-     */
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(15)
-      .fillColor("#a855f7")
-      .text(
-        `NEXO-${ticket._id
-          .toString()
-          .slice(-5)}`,
-        40,
-        doc.y,
-        {
-          width: doc.page.width - 80,
-          align: "center"
-        }
-      );
-
-    doc.moveDown(0.7);
 
     /**
      * 🦶 FOOTER

@@ -44,15 +44,55 @@ export function initCheckoutPage() {
 
   function update() {
 
-    const total = precio * cantidad;
+    const subtotal = precio * cantidad;
+
+    const codigo =
+      ($("codigo")?.value || "")
+        .trim()
+        .toUpperCase();
+
+    let descuento = 0;
+
+    if (codigo === "NEXO10") {
+      descuento = subtotal * 0.10;
+    }
+
+    const total = subtotal - descuento;
 
     const cantidadEl = $("cantidad");
     const subtotalEl = $("subtotal");
     const totalEl = $("total");
+    const descuentoEl = $("descuento");
+    const discountBox = $("discountBox");
 
-    if (cantidadEl) cantidadEl.innerText = String(cantidad);
-    if (subtotalEl) subtotalEl.innerText = money(total);
-    if (totalEl) totalEl.innerText = money(total);
+    if (cantidadEl) {
+      cantidadEl.innerText = String(cantidad);
+    }
+
+    if (subtotalEl) {
+      subtotalEl.innerText = money(subtotal);
+    }
+
+    if (totalEl) {
+      totalEl.innerText = money(total);
+    }
+
+    if (descuento > 0) {
+
+      if (discountBox) {
+        discountBox.classList.remove("hidden");
+      }
+
+      if (descuentoEl) {
+        descuentoEl.innerText = `-${money(descuento)}`;
+      }
+
+    } else {
+
+      if (discountBox) {
+        discountBox.classList.add("hidden");
+      }
+    }
   }
 
   function sumar() {
@@ -61,9 +101,21 @@ export function initCheckoutPage() {
   }
 
   function restar() {
+
     if (cantidad <= 1) return;
+
     cantidad--;
+
     update();
+  }
+
+  /**
+   * 📧 VALIDAR EMAIL
+   */
+  function validarEmail(email) {
+
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      .test(email);
   }
 
   async function continuarPago() {
@@ -71,46 +123,101 @@ export function initCheckoutPage() {
     const nombre = getValue("nombre");
     const apellido = getValue("apellido");
     const dni = getValue("dni");
+    const telefono = getValue("telefono");
     const email = getValue("email");
-    const terms = $("terms")?.checked;
 
-    if (!nombre || !apellido || !dni || !email) {
-      return alert("Completa todos los campos");
+    const codigo =
+      getValue("codigo")
+        .toUpperCase();
+
+    const terms =
+      $("terms")?.checked;
+
+    /**
+     * 🔥 RESET ERRORES
+     */
+    $("emailError")
+      ?.classList.add("hidden");
+
+    $("termsError")
+      ?.classList.add("hidden");
+
+    /**
+     * 🔥 VALIDAR CAMPOS
+     */
+    if (
+      !nombre ||
+      !apellido ||
+      !dni ||
+      !telefono ||
+      !email
+    ) {
+
+      return alert(
+        "Completa todos los campos"
+      );
     }
 
+    /**
+     * 🔥 VALIDAR EMAIL
+     */
+    if (!validarEmail(email)) {
+
+      $("emailError")
+        ?.classList.remove("hidden");
+
+      return;
+    }
+
+    /**
+     * 🔥 VALIDAR TERMINOS
+     */
     if (!terms) {
-      return alert("Acepta términos y condiciones");
+
+      $("termsError")
+        ?.classList.remove("hidden");
+
+      return;
     }
 
     const btn = $("btnComprar");
+
     if (!btn) return;
 
     btn.disabled = true;
+
     btn.innerText = "Procesando...";
 
     try {
 
       const data = await crearOrden({
+
         evento_id: evento._id,
+
         items: [
           {
             tipo: entrada?.tipo || "General",
             cantidad
           }
         ],
+
         cliente: {
           nombre,
           apellido,
           dni,
+          telefono,
           email
-        }
+        },
+
+        codigo_descuento: codigo
       });
 
       if (!data?.init_point) {
         throw new Error("Respuesta inválida");
       }
 
-      window.location.href = data.init_point;
+      window.location.href =
+        data.init_point;
 
     } catch (err) {
 
@@ -119,7 +226,9 @@ export function initCheckoutPage() {
       alert("Error en compra");
 
       btn.disabled = false;
-      btn.innerText = "Continuar al pago";
+
+      btn.innerText =
+        "Continuar al pago";
     }
   }
 
@@ -134,9 +243,23 @@ export function initCheckoutPage() {
     const btnRestar = $("btnRestar");
     const btnComprar = $("btnComprar");
 
-    if (btnSumar) btnSumar.addEventListener("click", sumar);
-    if (btnRestar) btnRestar.addEventListener("click", restar);
-    if (btnComprar) btnComprar.addEventListener("click", continuarPago);
+    if (btnSumar) {
+      btnSumar.addEventListener("click", sumar);
+    }
+
+    if (btnRestar) {
+      btnRestar.addEventListener("click", restar);
+    }
+
+    if (btnComprar) {
+      btnComprar.addEventListener("click", continuarPago);
+    }
+
+    /**
+     * 🔥 CUPON LIVE
+     */
+    $("codigo")
+      ?.addEventListener("input", update);
   }
 
   /**
@@ -147,6 +270,7 @@ export function initCheckoutPage() {
   function renderEvento(container, evento, imagen) {
 
     container.innerHTML = `
+
       <img
         src="${imagen}"
         class="rounded-3xl w-full h-[450px] object-cover"
@@ -160,6 +284,7 @@ export function initCheckoutPage() {
   }
 
   function renderFatalError() {
+
     document.body.innerHTML = `
       <div class="text-red-400 text-center p-10 text-2xl">
         Error cargando checkout
@@ -174,6 +299,7 @@ export function initCheckoutPage() {
    */
 
   function safeGet(key) {
+
     try {
       return Storage.get(key);
     } catch {
@@ -182,12 +308,14 @@ export function initCheckoutPage() {
   }
 
   function getEntrada(evento) {
+
     return Array.isArray(evento?.entradas)
       ? evento.entradas[0]
       : null;
   }
 
   function getValue(id) {
+
     return $(id)?.value?.trim() || "";
   }
 
@@ -195,24 +323,38 @@ export function initCheckoutPage() {
 
     const img = evento?.imagen;
 
-    const fallback = "/assets/images/events/nexo_back.jpg";
+    const fallback =
+      "/assets/images/events/nexo_back.jpg";
 
     if (!img || typeof img !== "string") {
       return fallback;
     }
 
-    // 🔥 SI YA ES URL ABSOLUTA
-    if (img.startsWith("http")) return img;
+    /**
+     * 🔥 URL ABSOLUTA
+     */
+    if (img.startsWith("http")) {
+      return img;
+    }
 
-    // 🔥 SI YA VIENE BIEN FORMATEADA
-    if (img.startsWith("/assets/")) return img;
+    /**
+     * 🔥 YA OK
+     */
+    if (img.startsWith("/assets/")) {
+      return img;
+    }
 
-    // 🔥 SI SOLO VIENE "1.jpg" o "nexo_back.jpg"
+    /**
+     * 🔥 SOLO NOMBRE
+     */
     if (!img.includes("/")) {
+
       return `/assets/images/events/${img}`;
     }
 
-    // 🔥 SI VIENE MAL ARMADA /images/... o public/images/...
+    /**
+     * 🔥 LIMPIAR
+     */
     const cleaned = img
       .replace("public/", "")
       .replace("/public", "")
