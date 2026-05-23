@@ -5,6 +5,35 @@ import Evento from "../models/Evento.js";
 
 const router = express.Router();
 
+const ADMIN_USER = process.env.ADMIN_USER || "nexo";
+const ADMIN_PASS = process.env.ADMIN_PASS || "procar#43";
+
+function isAuthorized(req) {
+  const authHeader = req.headers.authorization || "";
+
+  if (!authHeader.startsWith("Basic ")) {
+    return false;
+  }
+
+  const base64 = authHeader.replace("Basic ", "");
+  const decoded = Buffer.from(base64, "base64").toString("utf8");
+  const [user, pass] = decoded.split(":");
+
+  return user === ADMIN_USER && pass === ADMIN_PASS;
+}
+
+router.use((req, res, next) => {
+  if (isAuthorized(req)) {
+    return next();
+  }
+
+  res.setHeader("WWW-Authenticate", 'Basic realm="Admin"');
+  return res.status(401).json({
+    ok: false,
+    error: "No autorizado"
+  });
+});
+
 /**
  * 📊 DASHBOARD GENERAL
  */

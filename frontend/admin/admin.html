@@ -1,261 +1,460 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Pro NEXO</title>
-
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(168, 85, 247, 0.25), transparent 20%),
+        radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.18), transparent 18%),
+        #020617;
+    }
 
+    .glass {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.35);
+    }
+
+    .metric-value {
+      letter-spacing: -0.04em;
+    }
+
+    .progress-track {
+      background: rgba(148, 163, 184, 0.18);
+    }
+  </style>
 </head>
+<body class="min-h-screen text-white">
+  <div id="app"></div>
 
-<body class="bg-gray-900 text-white p-6">
+  <script>
+    const API = window.location.origin;
+    const ADMIN_USER = "nexo";
+    const ADMIN_PASS = "procar#43";
+    const SESSION_KEY = "nexo_admin_session";
 
-  <h1 class="text-3xl font-bold text-purple-400 mb-6">
-    Admin Pro NEXO
-  </h1>
+    const state = {
+      eventos: [],
+      tickets: [],
+      dashboard: {}
+    };
 
-  <button
-    onclick="cargarTodo()"
-    class="bg-purple-600 hover:bg-purple-700 transition px-4 py-2 rounded mb-6"
-  >
-    Refrescar
-  </button>
+    function isAuthenticated() {
+      return sessionStorage.getItem(SESSION_KEY) === "1";
+    }
 
-  <div id="loading" class="text-gray-400 mb-4">
-    Cargando datos...
-  </div>
+    function setAuthenticated() {
+      sessionStorage.setItem(SESSION_KEY, "1");
+    }
 
-  <!-- DASHBOARD -->
-  <div id="dashboard" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
+    function clearAuthenticated() {
+      sessionStorage.removeItem(SESSION_KEY);
+    }
 
-  <h2 class="text-xl mb-2">Eventos</h2>
-  <div id="eventos" class="mb-8"></div>
+    function getAuthHeaders() {
+      const token = btoa(`${ADMIN_USER}:${ADMIN_PASS}`);
+      return { Authorization: `Basic ${token}` };
+    }
 
-  <h2 class="text-xl mb-2">Tickets</h2>
-  <div id="tickets"></div>
+    function formatCurrency(value) {
+      return new Intl.NumberFormat("es-AR", {
+        style: "currency",
+        currency: "ARS"
+      }).format(Number(value || 0));
+    }
 
-<script>
+    function formatDate(date) {
+      return new Date(date).toLocaleString("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
 
-const API = window.location.origin;
+    function getEstadoEvento(evento) {
+      if (!evento) return "Sin estado";
 
-function setLoading(state) {
+      const estado = evento.estado || "activo";
 
-  document.getElementById("loading").style.display =
-    state ? "block" : "none";
-}
+      if (estado === "activo") return "Activo";
+      if (estado === "agotado") return "Agotado";
+      return "Finalizado";
+    }
 
-async function cargarTodo() {
+    function getEstadoClasses(estado) {
+      if (estado === "Activo") return "bg-emerald-500/15 text-emerald-300 border-emerald-400/30";
+      if (estado === "Agotado") return "bg-amber-500/15 text-amber-200 border-amber-400/30";
+      return "bg-slate-500/15 text-slate-200 border-slate-400/20";
+    }
 
-  try {
+    function sumEntradas(entradas = []) {
+      return entradas.reduce((acc, entrada) => acc + Number(entrada.stock || 0), 0);
+    }
 
-    setLoading(true);
+    function getTicketsForEvent(eventId) {
+      return state.tickets.filter(ticket => String(ticket.evento_id?._id || ticket.evento_id) === String(eventId));
+    }
 
-    const [dashRes, eventosRes, ticketsRes] = await Promise.all([
-      fetch(`${API}/api/admin/dashboard`),
-      fetch(`${API}/api/admin/eventos`),
-      fetch(`${API}/api/admin/tickets?usados=false`)
-    ]);
+    function getCustomersForEvent(eventId) {
+      const unique = new Map();
 
-    const dash =
-      await dashRes.json().catch(() => ({}));
+      getTicketsForEvent(eventId).forEach(ticket => {
+        const orden = ticket.orden_id;
 
-    const eventos =
-      await eventosRes.json().catch(() => ({}));
+        if (!orden?._id) return;
 
-    const tickets =
-      await ticketsRes.json().catch(() => ({}));
+        if (!unique.has(String(orden._id))) {
+          unique.set(String(orden._id), {
+            nombre: orden.cliente?.nombre || "",
+            apellido: orden.cliente?.apellido || "",
+            email: orden.cliente?.email || "",
+            telefono: orden.cliente?.telefono || "Sin teléfono",
+            dni: orden.cliente?.dni || "Sin DNI",
+            tipo: ticket.tipo,
+            usado: ticket.usado
+          });
+        }
+      });
 
-    renderDashboard(dash?.data || {});
-    renderEventos(eventos?.data || []);
-    renderTickets(tickets?.tickets || []);
+      return Array.from(unique.values());
+    }
 
-  } catch (error) {
+    async function fetchPdf(eventId) {
+      const response = await fetch(`${API}/api/reportes/eventos/${eventId}/pdf`, {
+        headers: getAuthHeaders()
+      });
 
-    console.error(error);
+      if (!response.ok) {
+        throw new Error("No se pudo generar el PDF");
+      }
 
-    alert("Error cargando panel admin");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const popup = window.open(url, "_blank");
 
-  } finally {
+      if (!popup) {
+        window.location.href = url;
+      }
 
-    setLoading(false);
-  }
-}
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }
 
-function renderDashboard(d = {}) {
-
-  document.getElementById("dashboard").innerHTML = `
-    ${card("Órdenes", d.totalOrdenes)}
-    ${card("Tickets", d.ticketsTotal)}
-    ${card("Usados", d.ticketsUsados)}
-    ${card("Ingresos", "$" + (d.ingresos || 0), "text-green-400")}
-  `;
-}
-
-function card(title, value, extra = "") {
-
-  return `
-    <div class="bg-gray-800 p-4 rounded-2xl border border-white/10">
-
-      <p class="text-gray-400">
-        ${title}
-      </p>
-
-      <b class="text-3xl ${extra}">
-        ${value ?? 0}
-      </b>
-
-    </div>
-  `;
-}
-
-function renderEventos(data = []) {
-
-  const div =
-    document.getElementById("eventos");
-
-  div.innerHTML = "";
-
-  if (!data.length) {
-
-    div.innerHTML = `
-      <p class="text-gray-400">
-        Sin eventos
-      </p>
-    `;
-
-    return;
-  }
-
-  data.forEach(e => {
-
-    const evento =
-      e?.evento || {};
-
-    div.innerHTML += `
-
-      <div class="bg-gray-800 border border-white/10 p-5 rounded-2xl mb-4">
-
-        <p class="text-2xl font-bold text-purple-400">
-          ${evento.nombre || "Evento"}
-        </p>
-
-        <div class="mt-4 space-y-2 text-gray-300">
-
-          <p>
-            🎟️ Ventas: ${e.ventas || 0}
+    function renderLogin() {
+      document.getElementById("app").innerHTML = `
+        <div class="mx-auto mt-24 max-w-md rounded-[28px] glass p-8">
+          <p class="text-sm uppercase tracking-[0.3em] text-purple-300">Acceso administrador</p>
+          <h1 class="mt-3 text-3xl font-bold">Admin Pro NEXO</h1>
+          <p class="mt-2 text-sm text-slate-300">
+            Control de ventas, check-in y reportes para cada evento.
           </p>
 
-          <p>
-            🎫 Tickets: ${e.tickets || 0}
-          </p>
-
-          <p>
-            ✅ Usados: ${e.usados || 0}
-          </p>
-
+          <form id="loginForm" class="mt-6 space-y-4">
+            <div>
+              <label for="usuario" class="block text-sm text-slate-200 mb-2">Usuario</label>
+              <input id="usuario" type="text" autocomplete="username" class="w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none ring-0 focus:border-purple-400" />
+            </div>
+            <div>
+              <label for="password" class="block text-sm text-slate-200 mb-2">Contraseña</label>
+              <input id="password" type="password" autocomplete="current-password" class="w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none focus:border-purple-400" />
+            </div>
+            <p id="loginError" class="hidden text-sm text-rose-300"></p>
+            <button type="submit" class="w-full rounded-xl bg-purple-600 px-4 py-3 font-semibold transition hover:bg-purple-500">
+              Ingresar
+            </button>
+          </form>
         </div>
+      `;
 
-      </div>
-    `;
-  });
-}
+      const form = document.getElementById("loginForm");
+      const error = document.getElementById("loginError");
 
-function renderTickets(data = []) {
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const usuario = document.getElementById("usuario").value.trim();
+        const password = document.getElementById("password").value;
 
-  const div =
-    document.getElementById("tickets");
+        if (usuario === ADMIN_USER && password === ADMIN_PASS) {
+          setAuthenticated();
+          renderDashboardPage();
+          return;
+        }
 
-  div.innerHTML = "";
+        error.textContent = "Usuario o contraseña incorrectos";
+        error.classList.remove("hidden");
+      });
+    }
 
-  if (!data.length) {
+    function renderDashboardPage() {
+      document.getElementById("app").innerHTML = `
+        <div class="mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 lg:px-8">
+          <header class="glass rounded-[28px] p-5 sm:p-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p class="text-xs uppercase tracking-[0.35em] text-purple-300">Panel administrativo</p>
+                <h1 class="mt-3 text-3xl font-bold text-white sm:text-4xl">Admin Pro NEXO</h1>
+                <p class="mt-2 max-w-2xl text-sm text-slate-300">
+                  Monitor de ventas, check-in y control de ingreso para cada evento en tiempo real.
+                </p>
+              </div>
+              <div class="flex flex-wrap gap-3">
+                <button onclick="cargarTodo()" class="rounded-xl bg-purple-600 px-4 py-2 font-semibold transition hover:bg-purple-500">Refrescar</button>
+                <button onclick="logout()" class="rounded-xl border border-white/10 bg-slate-950 px-4 py-2 font-semibold text-white transition hover:border-white/25">Cerrar sesión</button>
+              </div>
+            </div>
+          </header>
 
-    div.innerHTML = `
-      <p class="text-gray-400">
-        Sin tickets
-      </p>
-    `;
+          <div id="loading" class="mt-5 text-sm text-slate-300">Cargando métricas operativas...</div>
 
-    return;
-  }
+          <section id="summary" class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4"></section>
 
-  data.forEach(t => {
-
-    const cliente =
-      t.orden_id?.cliente || {};
-
-    div.innerHTML += `
-
-      <div class="bg-gray-800 border border-white/10 p-5 rounded-2xl mb-4">
-
-        <div class="flex items-start justify-between gap-6">
-
-          <!-- INFO -->
-          <div class="flex-1">
-
-            <p class="font-bold text-xl text-purple-400">
-              ${t.tipo || "Ticket"}
-            </p>
-
-            <p class="text-gray-500 text-xs mt-1 break-all">
-              ID: ${t._id || ""}
-            </p>
-
-            <div class="mt-4 space-y-2 text-sm text-gray-300">
-
-              <p>
-                👤
-                ${cliente.nombre || ""}
-                ${cliente.apellido || ""}
-              </p>
-
-              <p>
-                📧
-                ${cliente.email || "Sin email"}
-              </p>
-
-              <p>
-                📞
-                ${cliente.telefono || "Sin teléfono"}
-              </p>
-
-              <p>
-                🪪
-                ${cliente.dni || "Sin DNI"}
-              </p>
-
+          <section class="mt-8 grid gap-6 xl:grid-cols-[2fr_1fr]">
+            <div class="glass rounded-[28px] p-5 sm:p-6">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="text-sm uppercase tracking-[0.3em] text-purple-300">Eventos</p>
+                  <h2 class="mt-2 text-2xl font-bold">Control de operación</h2>
+                </div>
+                <p class="text-sm text-slate-300">Imprimí el listado de compradores por evento para el ingreso.</p>
+              </div>
+              <div id="eventos" class="mt-4 space-y-4"></div>
             </div>
 
-          </div>
-
-          <!-- ESTADO -->
-          <div class="
-            ${t.usado
-              ? "bg-red-500/20 text-red-400 border-red-500/30"
-              : "bg-green-500/20 text-green-400 border-green-500/30"
-            }
-            border px-4 py-2 rounded-xl font-bold text-sm
-          ">
-
-            ${t.usado
-              ? "USADO"
-              : "ACTIVO"
-            }
-
-          </div>
-
+            <div class="glass rounded-[28px] p-5 sm:p-6">
+              <p class="text-sm uppercase tracking-[0.3em] text-purple-300">Check-in</p>
+              <h2 class="mt-2 text-2xl font-bold">Estado de tickets</h2>
+              <div id="checkin" class="mt-4 space-y-3"></div>
+            </div>
+          </section>
         </div>
+      `;
 
-      </div>
-    `;
-  });
-}
+      cargarTodo();
+    }
 
-cargarTodo();
+    function setLoading(state) {
+      const loading = document.getElementById("loading");
+      if (loading) loading.style.display = state ? "block" : "none";
+    }
 
-</script>
+    function renderMetricCard(title, value, subtitle, tone = "text-white") {
+      return `
+        <div class="glass rounded-[24px] p-5">
+          <p class="text-sm uppercase tracking-[0.25em] text-slate-300">${title}</p>
+          <div class="mt-4 metric-value text-3xl font-bold ${tone}">${value}</div>
+          <p class="mt-2 text-sm text-slate-300">${subtitle}</p>
+        </div>
+      `;
+    }
 
+    function renderSummary() {
+      const totalOrders = state.dashboard.totalOrdenes || 0;
+      const totalTickets = state.dashboard.ticketsTotal || 0;
+      const usedTickets = state.dashboard.ticketsUsados || 0;
+      const incomes = state.dashboard.ingresos || 0;
+      const activeEvents = state.eventos.filter(evento => (evento.evento?.estado || "activo") === "activo").length;
+      const remainingStock = state.eventos.reduce((acc, evento) => acc + sumEntradas(evento.evento?.entradas || []), 0);
+      const totalCapacity = remainingStock + totalTickets;
+      const occupancy = totalCapacity ? Math.round((totalTickets / totalCapacity) * 100) : 0;
+      const checkinRate = totalTickets ? Math.round((usedTickets / totalTickets) * 100) : 0;
+
+      document.getElementById("summary").innerHTML = `
+        ${renderMetricCard("Órdenes pagas", totalOrders.toLocaleString("es-AR"), "Compras confirmadas en el sistema")}
+        ${renderMetricCard("Tickets vendidos", totalTickets.toLocaleString("es-AR"), `${occupancy}% de ocupación total`)}
+        ${renderMetricCard("Check-in realizado", usedTickets.toLocaleString("es-AR"), `${checkinRate}% de uso del evento`, "text-emerald-300")}
+        ${renderMetricCard("Ingresos", formatCurrency(incomes), "Volumen financiero acumulado")}
+        ${renderMetricCard("Eventos activos", activeEvents.toLocaleString("es-AR"), "Eventos disponibles para venta")}
+        ${renderMetricCard("Entradas disponibles", remainingStock.toLocaleString("es-AR"), "Stock actual en la base de datos")}
+      `;
+    }
+
+    function renderEventCard(eventoData) {
+      const evento = eventoData.evento || {};
+      const estado = getEstadoEvento(evento);
+      const stockActual = sumEntradas(evento.entradas || []);
+      const sold = Number(eventoData.tickets || 0);
+      const totalCapacity = stockActual + sold;
+      const soldRate = totalCapacity ? Math.round((sold / totalCapacity) * 100) : 0;
+      const clientes = getCustomersForEvent(evento._id);
+
+      const entradas = (evento.entradas || []).map((entrada) => {
+        const valor = Number(entrada.precio || 0);
+        return `
+          <div class="rounded-xl border border-white/10 bg-slate-950/90 px-3 py-2">
+            <p class="text-sm font-semibold text-white">${entrada.tipo}</p>
+            <p class="text-xs text-slate-300">$${valor.toLocaleString("es-AR")}</p>
+            <p class="mt-1 text-xs text-emerald-300">Stock: ${Number(entrada.stock || 0)}</p>
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <div class="rounded-[24px] border border-white/10 bg-slate-950/80 p-4 sm:p-5">
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p class="text-xs uppercase tracking-[0.3em] text-purple-300">${formatDate(evento.fecha)}</p>
+              <h3 class="mt-2 text-xl font-bold text-white">${evento.nombre || "Evento"}</h3>
+              <p class="mt-1 text-sm text-slate-300">${evento.lugar || "Lugar a confirmar"} • ${evento.localidad || "Localidad a confirmar"}</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <span class="rounded-full border px-3 py-1 text-xs font-semibold ${getEstadoClasses(estado)}">${estado}</span>
+              <span class="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-200">${sold} vendidas</span>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <div class="flex items-center justify-between text-sm text-slate-200">
+              <span>Ocupación</span>
+              <span>${soldRate}%</span>
+            </div>
+            <div class="progress-track mt-2 h-2 rounded-full overflow-hidden">
+              <div class="h-full rounded-full bg-gradient-to-r from-purple-500 to-emerald-400" style="width:${soldRate}%"></div>
+            </div>
+          </div>
+
+          <div class="mt-4 grid gap-3 md:grid-cols-3">
+            ${entradas}
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-3">
+            <button onclick="printEventPdf('${evento._id}')" class="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold transition hover:bg-purple-500">Imprimir control de ingreso</button>
+            <button onclick="toggleClientes('${evento._id}')" class="rounded-xl border border-white/10 bg-slate-950 px-4 py-2 text-sm font-semibold transition hover:border-white/20">Ver clientes</button>
+          </div>
+
+          <div id="clientes-${evento._id}" class="mt-4 hidden rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+            ${clientes.length ? clientes.map(cliente => `
+              <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 py-3 last:border-b-0">
+                <div>
+                  <p class="font-semibold text-white">${cliente.nombre} ${cliente.apellido}</p>
+                  <p class="text-sm text-slate-300">${cliente.email}</p>
+                </div>
+                <div class="text-sm text-slate-300">
+                  <p>${cliente.telefono}</p>
+                  <p>DNI: ${cliente.dni}</p>
+                </div>
+              </div>
+            `).join("") : `<p class="text-sm text-slate-300">No hay compradores cargados para este evento.</p>`}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderEventos() {
+      const container = document.getElementById("eventos");
+
+      if (!state.eventos.length) {
+        container.innerHTML = `<p class="mt-3 text-sm text-slate-300">No hay eventos disponibles.</p>`;
+        return;
+      }
+
+      container.innerHTML = state.eventos.map(renderEventCard).join("");
+    }
+
+    function renderCheckin() {
+      const container = document.getElementById("checkin");
+      const activos = state.tickets.filter(ticket => !ticket.usado);
+      const usados = state.tickets.filter(ticket => ticket.usado);
+
+      container.innerHTML = `
+        <div class="rounded-2xl border border-white/10 bg-slate-950/80 p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-slate-300">Tickets activos</p>
+              <p class="mt-2 text-2xl font-bold text-emerald-300">${activos.length}</p>
+            </div>
+            <div>
+              <p class="text-sm text-slate-300">Tickets usados</p>
+              <p class="mt-2 text-2xl font-bold text-rose-300">${usados.length}</p>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 space-y-3">
+          ${state.tickets.slice(0, 6).map(ticket => `
+            <div class="rounded-2xl border border-white/10 bg-slate-950/80 p-4">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="font-semibold text-white">${ticket.tipo || "Entrada"}</p>
+                  <p class="text-sm text-slate-300">${ticket.orden_id?.cliente?.nombre || ""} ${ticket.orden_id?.cliente?.apellido || ""}</p>
+                </div>
+                <span class="rounded-full px-3 py-1 text-xs font-semibold ${ticket.usado ? "bg-rose-500/15 text-rose-200" : "bg-emerald-500/15 text-emerald-200"}">${ticket.usado ? "Usado" : "Activo"}</span>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    async function cargarTodo() {
+      try {
+        setLoading(true);
+
+        const [dashboardRes, eventosRes, ticketsRes] = await Promise.all([
+          fetch(`${API}/api/admin/dashboard`, { headers: getAuthHeaders() }),
+          fetch(`${API}/api/admin/eventos`, { headers: getAuthHeaders() }),
+          fetch(`${API}/api/admin/tickets`, { headers: getAuthHeaders() })
+        ]);
+
+        if ([dashboardRes, eventosRes, ticketsRes].some(res => res.status === 401)) {
+          logout();
+          return;
+        }
+
+        const dashboard = await dashboardRes.json().catch(() => ({ data: {} }));
+        const eventos = await eventosRes.json().catch(() => ({ data: [] }));
+        const tickets = await ticketsRes.json().catch(() => ({ tickets: [] }));
+
+        state.dashboard = dashboard.data || {};
+        state.eventos = (eventos.data || []).map(item => ({
+          ...item,
+          tickets: Number(item.tickets || 0)
+        }));
+        state.tickets = tickets.tickets || [];
+
+        renderSummary();
+        renderEventos();
+        renderCheckin();
+      } catch (error) {
+        console.error(error);
+        alert("Error cargando panel admin");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    window.printEventPdf = async function (eventId) {
+      try {
+        await fetchPdf(eventId);
+      } catch (error) {
+        console.error(error);
+        alert("No se pudo generar el PDF del evento");
+      }
+    };
+
+    window.toggleClientes = function (eventId) {
+      const section = document.getElementById(`clientes-${eventId}`);
+      if (!section) return;
+      section.classList.toggle("hidden");
+    };
+
+    window.cargarTodo = cargarTodo;
+
+    function logout() {
+      clearAuthenticated();
+      renderLogin();
+    }
+
+    window.logout = logout;
+
+    if (isAuthenticated()) {
+      renderDashboardPage();
+    } else {
+      renderLogin();
+    }
+  </script>
 </body>
 </html>

@@ -6,6 +6,52 @@ import Orden from "../models/Orden.js";
 
 const router = express.Router();
 
+const ADMIN_USER = process.env.ADMIN_USER || "nexo";
+const ADMIN_PASS = process.env.ADMIN_PASS || "procar#43";
+
+function isAuthorized(req) {
+  const authHeader = req.headers.authorization || "";
+
+  if (!authHeader.startsWith("Basic ")) {
+    return false;
+  }
+
+  const decoded = Buffer.from(
+    authHeader.replace("Basic ", ""),
+    "base64"
+  ).toString("utf8");
+
+  const [user, pass] = decoded.split(":");
+
+  return user === ADMIN_USER && pass === ADMIN_PASS;
+}
+
+router.use((req, res, next) => {
+  if (isAuthorized(req)) {
+    return next();
+  }
+
+  res.setHeader("WWW-Authenticate", 'Basic realm="Admin"');
+  return res.status(401).send("No autorizado");
+});
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS"
+  }).format(Number(value || 0));
+}
+
+function formatDate(date) {
+  return new Date(date).toLocaleString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
 router.get("/eventos/:id/pdf", async (req, res) => {
 
   try {
@@ -19,7 +65,11 @@ router.get("/eventos/:id/pdf", async (req, res) => {
     const ordenes = await Orden.find({
       evento_id: evento._id,
       estado: "pagado"
-    });
+    }).sort({ createdAt: 1 });
+
+    const totalEntradas = ordenes.reduce((acc, orden) => {
+      return acc + orden.items.reduce((sum, item) => sum + Number(item.cantidad || 0), 0);
+    }, 0);
 
     const doc = new PDFDocument({ margin: 40 });
 
@@ -31,52 +81,80 @@ router.get("/eventos/:id/pdf", async (req, res) => {
 
     doc.pipe(res);
 
-    // 🖼️ LOGO
     const logoPath = path.join(
       process.cwd(),
       "../frontend/public/assets/images/branding/nexo_logo_transparente.png"
     );
 
-    doc.image(logoPath, {
-      fit: [120, 120],
-      align: "center"
-    });
+    try {
+      doc.image(logoPath, {
+        fit: [110, 110],
+        align: "center"
+      });
+    } catch {
+      // no-op
+    }
 
     doc.moveDown();
 
-    // 🧾 TITULO
-    doc.fontSize(20)
-      .text("NEXO PRODUCCIONES", { align: "center" });
+    doc.fillColor("#111827");
+    doc.fontSize(22).font("Helvetica-Bold")
+      .text("Control de ingreso", { align: "center" });
 
-    doc.fontSize(14)
+    doc.fontSize(14).font("Helvetica")
       .text(evento.nombre, { align: "center" });
 
-    doc.moveDown(2);
+    doc.moveDown(1.5);
 
-    doc.fontSize(12)
-      .text("Listado de compradores", { underline: true });
+    doc.fillColor("#1f2937");
+    doc.fontSize(10)
+      .text(`Fecha: ${formatDate(evento.fecha)}`)
+      .text(`Lugar: ${evento.lugar || "Lugar a confirmar"}`)
+      .text(`Localidad: ${evento.localidad || "Localidad a confirmar"}`)
+      .text(`Dirección: ${evento.direccion || "Dirección a confirmar"}`);
 
-    doc.moveDown();
+    doc.moveDown(1);
 
-    // 📄 LISTADO
-    ordenes.forEach((o, i) => {
+    doc.fillColor("#7c3aed");
+    doc.fontSize(12).font("Helvetica-Bold")
+      .text(`Compradores: ${ordenes.length}`);
+    doc.fontSize(12).font("Helvetica-Bold")
+      .text(`Entradas vendidas: ${totalEntradas}`);
 
-      const totalEntradas = o.items.reduce(
-        (acc, it) => acc + it.cantidad,
+    if (ordenes.length === 0) {
+      doc.moveDown(1);
+      doc.fillColor("#111827");
+      doc.fontSize(11)
+        .text("No hay compras confirmadas para este evento.");
+      doc.end();
+      return;
+    }
+
+    doc.moveDown(1.5);
+
+    ordenes.forEach((orden, index) => {
+      const totalEntradas = orden.items.reduce(
+        (acc, item) => acc + Number(item.cantidad || 0),
         0
       );
 
-      doc.fontSize(10).text(
-        `${i + 1}. ${o.cliente.nombre} ${o.cliente.apellido}`
-      );
+      const tipos = orden.items
+        .map(item => `${item.tipo} x${item.cantidad}`)
+        .join(" • ");
 
-      doc.text(`DNI: ${o.cliente.dni}`);
-      doc.text(`Teléfono: ${o.cliente.telefono || "No informado"}`);
-      doc.text(`Email: ${o.cliente.email}`);
+      doc.fillColor("#111827");
+      doc.fontSize(11).font("Helvetica-Bold")
+        .text(`${index + 1}. ${orden.cliente.nombre} ${orden.cliente.apellido}`);
+
+      doc.fontSize(10).font("Helvetica");
+      doc.fillColor("#111827");
+      doc.text(`DNI: ${orden.cliente.dni}`);
+      doc.text(`Teléfono: ${orden.cliente.telefono || "No informado"}`);
+      doc.text(`Email: ${orden.cliente.email}`);
       doc.text(`Entradas: ${totalEntradas}`);
-
-      doc.moveDown();
-
+      doc.text(`Detalle: ${tipos}`);
+      doc.text(`Total abonado: ${formatCurrency(orden.total)}`);
+      doc.moveDown(0.7);
     });
 
     doc.end();
