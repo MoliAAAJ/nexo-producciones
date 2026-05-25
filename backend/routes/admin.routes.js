@@ -5,33 +5,67 @@ import Evento from "../models/Evento.js";
 
 const router = express.Router();
 
-const ADMIN_USER = process.env.ADMIN_USER || "nexo";
-const ADMIN_PASS = process.env.ADMIN_PASS || "procar#43";
+/**
+ * VARIABLES DE ENTORNO
+ */
+const ADMIN_USER = process.env.ADMIN_USER;
+const ADMIN_PASS = process.env.ADMIN_PASS;
 
+/**
+ * AUTH BASIC
+ */
 function isAuthorized(req) {
+
   const authHeader = req.headers.authorization || "";
 
   if (!authHeader.startsWith("Basic ")) {
     return false;
   }
 
-  const base64 = authHeader.replace("Basic ", "");
-  const decoded = Buffer.from(base64, "base64").toString("utf8");
-  const [user, pass] = decoded.split(":");
+  try {
 
-  return user === ADMIN_USER && pass === ADMIN_PASS;
+    const base64 = authHeader.replace("Basic ", "");
+
+    const decoded = Buffer
+      .from(base64, "base64")
+      .toString("utf8");
+
+    const separatorIndex = decoded.indexOf(":");
+
+    if (separatorIndex === -1) {
+      return false;
+    }
+
+    const user = decoded.substring(0, separatorIndex);
+    const pass = decoded.substring(separatorIndex + 1);
+
+    return (
+      user === ADMIN_USER &&
+      pass === ADMIN_PASS
+    );
+
+  } catch (err) {
+
+    return false;
+
+  }
+
 }
 
+/**
+ * MIDDLEWARE ADMIN
+ */
 router.use((req, res, next) => {
+
   if (isAuthorized(req)) {
     return next();
   }
 
-  res.setHeader("WWW-Authenticate", 'Basic realm="Admin"');
   return res.status(401).json({
     ok: false,
     error: "No autorizado"
   });
+
 });
 
 /**
@@ -50,11 +84,17 @@ router.get("/dashboard", async (req, res) => {
     });
 
     const ingresos = await Orden.aggregate([
-      { $match: { estado: "pagado" } },
+      {
+        $match: {
+          estado: "pagado"
+        }
+      },
       {
         $group: {
           _id: null,
-          total: { $sum: "$total" }
+          total: {
+            $sum: "$total"
+          }
         }
       }
     ]);
@@ -93,14 +133,26 @@ router.get("/tickets", async (req, res) => {
 
     const filter = {};
 
-    if (usados === "true") filter.usado = true;
-    if (usados === "false") filter.usado = false;
+    if (usados === "true") {
+      filter.usado = true;
+    }
 
-    const tickets = await Ticket
-      .find(filter)
-      .populate("evento_id")
-      .populate("orden_id")
-      .sort({ createdAt: -1 });
+    if (usados === "false") {
+      filter.usado = false;
+    }
+
+    const tickets = await Ticket.find(filter)
+      .populate(
+        "evento_id",
+        "titulo fecha lugar"
+      )
+      .populate(
+        "orden_id",
+        "cliente total estado"
+      )
+      .sort({
+        createdAt: -1
+      });
 
     res.json({
       ok: true,
@@ -108,6 +160,8 @@ router.get("/tickets", async (req, res) => {
     });
 
   } catch (err) {
+
+    console.error(err);
 
     res.status(500).json({
       ok: false,
@@ -128,30 +182,32 @@ router.get("/eventos", async (req, res) => {
     const eventos = await Evento.find();
 
     const data = await Promise.all(
-      eventos.map(async (e) => {
+
+      eventos.map(async (evento) => {
 
         const ventas = await Orden.countDocuments({
-          evento_id: e._id,
+          evento_id: evento._id,
           estado: "pagado"
         });
 
         const tickets = await Ticket.countDocuments({
-          evento_id: e._id
+          evento_id: evento._id
         });
 
         const usados = await Ticket.countDocuments({
-          evento_id: e._id,
+          evento_id: evento._id,
           usado: true
         });
 
         return {
-          evento: e,
+          evento,
           ventas,
           tickets,
           usados
         };
 
       })
+
     );
 
     res.json({
@@ -160,6 +216,8 @@ router.get("/eventos", async (req, res) => {
     });
 
   } catch (err) {
+
+    console.error(err);
 
     res.status(500).json({
       ok: false,
