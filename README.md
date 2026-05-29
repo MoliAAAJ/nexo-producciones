@@ -2,7 +2,43 @@
 
 Sistema de venta de entradas online con frontend estático, backend en Node.js/Express, base de datos MongoDB y pasarela de pago MercadoPago.
 
-## Características principales
+## 📖 Guía de Uso (Para el Administrador)
+
+Esta sección explica cómo operar el sistema una vez que está instalado.
+
+### 1. Panel de Administración
+Para acceder al panel de control, ingresá a la ruta `/admin/dashboard.html` (o la URL que te haya proporcionado el desarrollador). Deberás ingresar el usuario y contraseña configurados.
+
+*   **Dashboard:** Visualizá el total de ventas, ingresos recaudados y el porcentaje de tickets usados en tiempo real.
+*   **Gestión de Eventos:** En el listado de eventos podés ver el estado de cada uno. 
+    *   `Activo`: El evento está a la venta.
+    *   `Agotado`: Se muestra en la web pero no permite comprar.
+    *   `Finalizado`: El evento ya pasó. El sistema lo marca automáticamente según la fecha, pero podés cambiarlo manualmente en la base de datos.
+
+### 2. Gestión de Cupones de Descuento
+El sistema cuenta con códigos de descuento pre-configurados (`NEXO10`, `NEXO20`, `NEXO30`, `NEXO40`, `NEXO50`).
+*   Para **activar o desactivar** un código, se debe solicitar al administrador de la base de datos que cambie el estado `activo` a `true` (activado) o `false` (desactivado).
+*   Los descuentos se aplican sobre el subtotal de la compra de forma automática.
+
+### 3. Control de Ingreso (Acreditaciones)
+El sistema permite validar los tickets en la puerta del evento:
+*   Cada ticket enviado por mail tiene un **Código QR único**.
+*   Al escanearlo, el sistema informará si el ticket es válido o si ya fue utilizado anteriormente.
+*   Podés descargar el **Listado de Compradores en PDF** desde el panel de reportes para tener una lista de papel si fuera necesario.
+
+---
+
+<div style="page-break-after: always;"></div>
+
+## 🛠️ Documentación Técnica (Para Desarrolladores)
+
+Información sobre el funcionamiento interno del sistema.
+
+## 🛠️ Documentación Técnica (Para Desarrolladores)
+
+Información sobre el funcionamiento interno del sistema.
+
+### Características principales
 - Checkout con MercadoPago Checkout PRO
 - Creación automática de órdenes y tickets
 - Generación de tickets QR y PDF
@@ -44,6 +80,7 @@ nexo-producciones/
 │   ├── controllers/
 │   │   └── orden.controller.js
 │   ├── models/
+│   │   ├── Cupon.js
 │   │   ├── Evento.js
 │   │   ├── Orden.js
 │   │   └── Ticket.js
@@ -57,6 +94,7 @@ nexo-producciones/
 │   │   ├── enviarTicketsEmail.js
 │   │   ├── generarPDF.js
 │   │   └── generarQR.js
+│   ├── seed_cupones.mongodb.js
 │   ├── package.json
 │   └── server.js
 ├── frontend/
@@ -99,7 +137,7 @@ npm install
 
 ```env
 PORT=3000
-MONGO_URI=mongodb://127.0.0.1:27017/nexo
+MONGO_URI=mongodb+srv://<usuario>:<password>@cluster.xxxx.mongodb.net/nexo
 BASE_URL=http://localhost:3000
 FRONT_URL=http://localhost:3000
 MERCADOPAGO_ACCESS_TOKEN=TEST-XXXXXXXX
@@ -133,14 +171,15 @@ npm start
 
 ---
 
-## 🌐 Rutas principales
+### 🌐 Rutas principales
 
-### Rutas públicas
+#### Rutas públicas
 - `GET /eventos` — lista eventos activos
 - `GET /*` — sirve el frontend estático
 
 ### API de ordenes
 - `POST /api/orden` — crea una orden y genera preference de MercadoPago
+- `GET /api/orden/cupon/:codigo` — valida si un cupón existe y está activo
 - `GET /api/orden/:id` — obtiene orden y tickets asociados
 - `GET /api/orden/ticket/:id/pdf` — descarga ticket en PDF
 
@@ -161,19 +200,23 @@ npm start
 
 ---
 
-## 🧾 Modelos de datos
+### 🧾 Modelos de datos
 
-### Evento
+#### Cupon
+- `codigo` (único, uppercase), `porcentaje`, `activo` (booleano)
+- Timestamps para trazabilidad
+
+#### Evento
 - `nombre`, `descripcion`, `fecha`, `lugar`, `direccion`, `localidad`, `imagen`, `estado`
 - `entradas`: array con `tipo`, `precio`, `stock`
 
-### Orden
+#### Orden
 - `evento_id` (referencia a Evento)
 - `cliente`: `nombre`, `apellido`, `dni`, `email`
 - `items`: `tipo`, `cantidad`, `precio_unitario`
 - `total`, `descuento`, `codigo_descuento`, `estado`
 
-### Ticket
+#### Ticket
 - `orden_id`, `evento_id`
 - `tipo`
 - `qr_code`
@@ -208,7 +251,7 @@ npm start
 
 ## 🧪 Observaciones adicionales
 
-- El descuento fijo propuesto es `NEXO10` y aplica 10% en backend.
+- El sistema usa un **sistema de cupones dinámico** gestionado en la base de datos (Colección `cupones`).
 - El sistema guarda órdenes en estado `pendiente` y solo genera tickets cuando MercadoPago confirma el pago.
 - El backend usa `express.static` para servir `frontend` y `frontend/public/assets`.
 
