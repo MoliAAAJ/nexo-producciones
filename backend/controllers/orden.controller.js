@@ -3,6 +3,7 @@
 import Evento from "../models/Evento.js";
 import Orden from "../models/Orden.js";
 import Ticket from "../models/Ticket.js";
+import Cupon from "../models/Cupon.js";
 
 import { generarPDF } from "../utils/generarPDF.js";
 import { preferenceClient } from "../config/mp.js";
@@ -79,12 +80,18 @@ export const crearOrden = async (req, res) => {
     }
 
     /**
-     * 💰 DESCUENTO BACKEND
+     * 💰 DESCUENTO DINÁMICO
      */
     let descuento = 0;
+    if (codigo_descuento) {
+      const cupon = await Cupon.findOne({
+        codigo: codigo_descuento.trim().toUpperCase(),
+        activo: true
+      });
 
-    if ((codigo_descuento || "").trim().toUpperCase() === "NEXO10") {
-      descuento = total * 0.10;
+      if (cupon) {
+        descuento = total * (cupon.porcentaje / 100);
+      }
     }
 
     /**
@@ -203,6 +210,30 @@ export const obtenerOrden = async (req, res) => {
     return res.status(500).json({
       error: "Error obteniendo orden"
     });
+  }
+};
+
+/**
+ * 🎟️ VALIDAR CUPÓN
+ */
+export const validarCupon = async (req, res) => {
+  try {
+    const { codigo } = req.params;
+
+    const cupon = await Cupon.findOne({ codigo: codigo.trim().toUpperCase() });
+
+    if (!cupon) {
+      return res.status(404).json({ ok: false, message: "El código ingresado no existe" });
+    }
+
+    if (!cupon.activo) {
+      return res.status(400).json({ ok: false, message: "Este cupón ya no se encuentra disponible" });
+    }
+
+    return res.json({ ok: true, porcentaje: cupon.porcentaje });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ ok: false, error: "Error al validar cupón" });
   }
 };
 

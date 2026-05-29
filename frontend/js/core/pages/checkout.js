@@ -19,6 +19,8 @@ export function initCheckoutPage() {
   }
 
   let cantidad = 1;
+  let couponPercent = 0;
+  let lastCouponChecked = "";
 
   const entrada = getEntrada(evento);
   const precio = Number(entrada?.precio || 0);
@@ -46,15 +48,10 @@ export function initCheckoutPage() {
 
     const subtotal = precio * cantidad;
 
-    const codigo =
-      ($("codigo")?.value || "")
-        .trim()
-        .toUpperCase();
-
     let descuento = 0;
 
-    if (codigo === "NEXO10") {
-      descuento = subtotal * 0.10;
+    if (couponPercent > 0) {
+      descuento = subtotal * (couponPercent / 100);
     }
 
     const total = subtotal - descuento;
@@ -107,6 +104,60 @@ export function initCheckoutPage() {
     cantidad--;
 
     update();
+  }
+
+  /**
+   * 🎟️ VALIDAR CUPÓN (ASYNC)
+   */
+  async function validarCuponLive() {
+    const code = ($("codigo")?.value || "").trim().toUpperCase();
+    const errorEl = $("cuponError");
+    const codigoInput = $("codigo");
+    
+    if (!code) {
+      couponPercent = 0;
+      lastCouponChecked = "";
+      if (errorEl) errorEl.classList.add("hidden");
+      if (codigoInput) codigoInput.classList.remove("border-red-500", "border-green-500");
+      update();
+      return;
+    }
+
+    if (code === lastCouponChecked) return;
+
+    try {
+      const res = await fetch(`/api/orden/cupon/${code}`);
+      const data = await res.json();
+      
+      lastCouponChecked = code;
+
+      if (data.ok) {
+        couponPercent = data.porcentaje;
+        if (errorEl) errorEl.classList.add("hidden");
+        if (codigoInput) {
+          codigoInput.classList.remove("border-red-500");
+          codigoInput.classList.add("border-green-500");
+        }
+      } else {
+        couponPercent = 0;
+        if (errorEl) {
+          errorEl.innerText = data.message || "Cupón no válido";
+          errorEl.classList.remove("hidden");
+        }
+        if (codigoInput) {
+          codigoInput.classList.remove("border-green-500");
+          codigoInput.classList.add("border-red-500");
+        }
+      }
+
+      update();
+    } catch {
+      lastCouponChecked = "";
+      couponPercent = 0;
+      if (codigoInput) codigoInput.classList.add("border-red-500");
+      if (errorEl) errorEl.classList.remove("hidden");
+      update();
+    }
   }
 
   /**
@@ -259,7 +310,7 @@ export function initCheckoutPage() {
      * 🔥 CUPON LIVE
      */
     $("codigo")
-      ?.addEventListener("input", update);
+      ?.addEventListener("input", validarCuponLive);
   }
 
   /**

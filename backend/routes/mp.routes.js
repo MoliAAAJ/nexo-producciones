@@ -5,7 +5,8 @@ import mongoose from "mongoose";
 
 import {
   MercadoPagoConfig,
-  Payment
+  Payment,
+  MerchantOrder
 } from "mercadopago";
 
 import Evento from "../models/Evento.js";
@@ -22,6 +23,7 @@ const client = new MercadoPagoConfig({
 });
 
 const paymentClient = new Payment(client);
+const merchantOrderClient = new MerchantOrder(client);
 
 /**
  * 🔥 WEBHOOK MERCADOPAGO
@@ -43,6 +45,7 @@ router.post("/webhook", async (req, res) => {
     if (type === "payment") {
       paymentId =
         req.body?.data?.id ||
+        req.body?.resource ||
         req.query["data.id"];
     }
 
@@ -60,11 +63,13 @@ router.post("/webhook", async (req, res) => {
 
       console.log("🧾 Merchant Order URL:", url);
 
-      const response = await fetch(url);
-      const merchantOrder = await response.json();
+      // Extraer el ID de la URL y usar el cliente oficial
+      const merchantOrderId = url.split("/").pop();
+      const response = await merchantOrderClient.get({ merchantOrderId });
+      const merchantOrder = response.body || response;
 
-      const payment = merchantOrder.payments?.find(
-        p => p.status === "approved"
+      const payment = (merchantOrder.payments || []).find(
+        (p) => p.status === "approved"
       );
 
       if (!payment) {
