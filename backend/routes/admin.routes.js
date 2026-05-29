@@ -2,71 +2,14 @@ import express from "express";
 import Orden from "../models/Orden.js";
 import Ticket from "../models/Ticket.js";
 import Evento from "../models/Evento.js";
+import { isAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
 
 /**
- * VARIABLES DE ENTORNO
+ * 🔐 PROTECCIÓN DE RUTAS
  */
-const ADMIN_USER = process.env.ADMIN_USER;
-const ADMIN_PASS = process.env.ADMIN_PASS;
-
-/**
- * AUTH BASIC
- */
-function isAuthorized(req) {
-
-  const authHeader = req.headers.authorization || "";
-
-  if (!authHeader.startsWith("Basic ")) {
-    return false;
-  }
-
-  try {
-
-    const base64 = authHeader.replace("Basic ", "");
-
-    const decoded = Buffer
-      .from(base64, "base64")
-      .toString("utf8");
-
-    const separatorIndex = decoded.indexOf(":");
-
-    if (separatorIndex === -1) {
-      return false;
-    }
-
-    const user = decoded.substring(0, separatorIndex);
-    const pass = decoded.substring(separatorIndex + 1);
-
-    return (
-      user === ADMIN_USER &&
-      pass === ADMIN_PASS
-    );
-
-  } catch (err) {
-
-    return false;
-
-  }
-
-}
-
-/**
- * MIDDLEWARE ADMIN
- */
-router.use((req, res, next) => {
-
-  if (isAuthorized(req)) {
-    return next();
-  }
-
-  return res.status(401).json({
-    ok: false,
-    error: "No autorizado"
-  });
-
-});
+router.use(isAdmin);
 
 /**
  * 📊 DASHBOARD GENERAL
@@ -178,37 +121,48 @@ router.get("/tickets", async (req, res) => {
 router.get("/eventos", async (req, res) => {
 
   try {
-
-    const eventos = await Evento.find();
-
-    const data = await Promise.all(
-
-      eventos.map(async (evento) => {
-
-        const ventas = await Orden.countDocuments({
-          evento_id: evento._id,
-          estado: "pagado"
-        });
-
-        const tickets = await Ticket.countDocuments({
-          evento_id: evento._id
-        });
-
-        const usados = await Ticket.countDocuments({
-          evento_id: evento._id,
-          usado: true
-        });
-
-        return {
-          evento,
-          ventas,
-          tickets,
-          usados
-        };
-
-      })
-
-    );
+    const data = await Evento.aggregate([
+      {
+        $lookup: {
+          from: "ordenes",
+          localField: "_id",
+          foreignField: "evento_id",
+          as: "ventas_info"
+        }
+      },
+      {
+        $lookup: {
+          from: "tickets",
+          localField: "_id",
+          foreignField: "evento_id",
+          as: "tickets_info"
+        }
+      },
+      {
+        $project: {
+          evento: "$$ROOT",
+          ventas: {
+            $size: {
+              $filter: {
+                input: "$ventas_info",
+                as: "v",
+                cond: { $eq: ["$$v.estado", "pagado"] }
+              }
+            }
+          },
+          tickets: { $size: "$tickets_info" },
+          usados: {
+            $size: {
+              $filter: {
+                input: "$tickets_info",
+                as: "t",
+                cond: { $eq: ["$$t.usado", true] }
+              }
+            }
+          }
+        }
+      }
+    ]);
 
     res.json({
       ok: true,

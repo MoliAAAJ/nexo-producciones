@@ -3,41 +3,11 @@ import PDFDocument from "pdfkit";
 import path from "path";
 import Evento from "../models/Evento.js";
 import Orden from "../models/Orden.js";
+import { isAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
 
-const ADMIN_USER = process.env.ADMIN_USER;
-const ADMIN_PASS = process.env.ADMIN_PASS;
-
-function isAuthorized(req) {
-  const authHeader = req.headers.authorization || "";
-
-  if (!authHeader.startsWith("Basic ")) {
-    return false;
-  }
-
-  if (!ADMIN_USER || !ADMIN_PASS) {
-    return false;
-  }
-
-  const decoded = Buffer.from(
-    authHeader.replace("Basic ", ""),
-    "base64"
-  ).toString("utf8");
-
-  const [user, pass] = decoded.split(":");
-
-  return user === ADMIN_USER && pass === ADMIN_PASS;
-}
-
-router.use((req, res, next) => {
-  if (isAuthorized(req)) {
-    return next();
-  }
-
-  res.setHeader("WWW-Authenticate", 'Basic realm="Admin"');
-  return res.status(401).send("No autorizado");
-});
+router.use(isAdmin);
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("es-AR", {
