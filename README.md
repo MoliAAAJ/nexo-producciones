@@ -7,17 +7,17 @@ Sistema de venta de entradas online con frontend estático, backend en Node.js/E
 Esta sección explica cómo operar el sistema una vez que está instalado.
 
 ### 1. Panel de Administración
-Para acceder al panel de control, ingresá a la ruta `/admin/dashboard.html` (o la URL que te haya proporcionado el desarrollador). Deberás ingresar el usuario y contraseña configurados.
+Para acceder al panel de control, ingresá a la ruta **"/admin/dashboard.html"** (o la URL que te haya proporcionado el desarrollador). Deberás ingresar el usuario y contraseña configurados.
 
 *   **Dashboard:** Visualizá el total de ventas, ingresos recaudados y el porcentaje de tickets usados en tiempo real.
 *   **Gestión de Eventos:** En el listado de eventos podés ver el estado de cada uno. 
-    *   `Activo`: El evento está a la venta.
-    *   `Agotado`: Se muestra en la web pero no permite comprar.
-    *   `Finalizado`: El evento ya pasó. El sistema lo marca automáticamente según la fecha, pero podés cambiarlo manualmente en la base de datos.
+    *   **ACTIVO**: El evento está a la venta.
+    *   **AGOTADO**: Se muestra en la web pero no permite comprar.
+    *   **FINALIZADO**: El evento ya pasó. El sistema lo marca automáticamente según la fecha, pero podés cambiarlo manualmente en la base de datos.
 
 ### 2. Gestión de Cupones de Descuento
-El sistema cuenta con códigos de descuento pre-configurados (`NEXO10`, `NEXO20`, `NEXO30`, `NEXO40`, `NEXO50`).
-*   Para **activar o desactivar** un código, se debe solicitar al administrador de la base de datos que cambie el estado `activo` a `true` (activado) o `false` (desactivado).
+El sistema cuenta con códigos de descuento pre-configurados (**NEXO10, NEXO20, NEXO30, NEXO40, NEXO50**).
+*   Para **activar o desactivar** un código, se debe solicitar al administrador de la base de datos que cambie el estado **activo** a **true** (activado) o **false** (desactivado).
 *   Los descuentos se aplican sobre el subtotal de la compra de forma automática.
 
 ### 3. Control de Ingreso (Acreditaciones)
@@ -29,10 +29,6 @@ El sistema permite validar los tickets en la puerta del evento:
 ---
 
 <div style="page-break-after: always;"></div>
-
-## 🛠️ Documentación Técnica (Para Desarrolladores)
-
-Información sobre el funcionamiento interno del sistema.
 
 ## 🛠️ Documentación Técnica (Para Desarrolladores)
 
@@ -99,15 +95,30 @@ nexo-producciones/
 │   └── server.js
 ├── frontend/
 │   ├── admin/
+│   │   └── dashboard.html
 │   ├── components/
+│   │   ├── header.html
+│   │   └── footer.html
 │   ├── js/
 │   │   ├── core/
+│   │   │   └── api.js
 │   │   └── pages/
+│   │       ├── admin.js
+│   │       ├── checkout.js
+│   │       └── home.js
 │   ├── pages/
+│   │   ├── index.html
+│   │   └── evento.html
 │   ├── payments/
+│   │   ├── success.html
+│   │   └── pending.html
 │   ├── public/
 │   │   └── assets/
+│   │       └── images/
+│   │           └── branding/
+│   │               └── nexo_logo_transparente.png
 │   └── styles/
+│       └── tailwind-custom.css
 └── README.md
 ```
 
@@ -117,25 +128,19 @@ nexo-producciones/
 
 1. Clona el repositorio:
 
-```bash
-git clone <repo-url>
-```
+> **COMANDO:** git clone <repo-url>
 
 2. Entra al backend:
 
-```bash
-cd ../nexo-producciones/backend
-```
+> **COMANDO:** cd ../nexo-producciones/backend
 
 3. Instala dependencias:
 
-```bash
-npm install
-```
+> **COMANDO:** npm install
 
-4. Crea el archivo `.env` con estas variables:
+4. Crea el archivo **.env** con estas variables:
 
-```env
+**CONFIGURACIÓN (.env):**
 PORT=3000
 MONGO_URI=mongodb+srv://<usuario>:<password>@cluster.xxxx.mongodb.net/nexo
 BASE_URL=http://localhost:3000
@@ -143,141 +148,124 @@ FRONT_URL=http://localhost:3000
 MERCADOPAGO_ACCESS_TOKEN=TEST-XXXXXXXX
 EMAIL_USER=tucorreo@gmail.com
 EMAIL_PASS=xxxxxxxx
-```
 
 > Usa credenciales válidas de MercadoPago y Gmail para pruebas. Si usas Gmail, habilita el acceso seguro o App Password si estás con 2FA.
 
 5. Asegúrate de que MongoDB esté corriendo:
 
-```bash
-sudo systemctl start mongod
-```
+> **COMANDO:** sudo systemctl start mongod
 
 ---
 
 ## ▶️ Ejecución
 
-Desde la carpeta `backend`:
+Desde la carpeta **"backend"**:
 
-```bash
-npm run dev
-```
+> **EJECUTAR:** npm run dev
 
 o en producción:
 
-```bash
-npm start
-```
+> **EJECUTAR:** npm start
 
 ---
 
 ### 🌐 Rutas principales
 
 #### Rutas públicas
-- `GET /eventos` — lista eventos activos
-- `GET /*` — sirve el frontend estático
+- **GET /eventos** — lista eventos activos
+- **GET /** — sirve el frontend estático
 
 ### API de ordenes
-- `POST /api/orden` — crea una orden y genera preference de MercadoPago
-- `GET /api/orden/cupon/:codigo` — valida si un cupón existe y está activo
-- `GET /api/orden/:id` — obtiene orden y tickets asociados
-- `GET /api/orden/ticket/:id/pdf` — descarga ticket en PDF
+- **POST /api/orden** — crea una orden y genera preference de MercadoPago
+- **GET /api/orden/cupon/:codigo** — valida si un cupón existe y está activo
+- **GET /api/orden/:id** — obtiene orden y tickets asociados
+- **GET /api/orden/ticket/:id/pdf** — descarga ticket en PDF
 
 ### Webhook de MercadoPago
-- `POST /mp/webhook` — recibe notificaciones de pago, marca la orden como `pagado`, genera tickets y dispara el email
+- **POST /mp/webhook** — recibe notificaciones de pago, marca la orden como **PAGADO**, genera tickets y dispara el email
 
 ### Validación de tickets
-- `POST /api/ticket/validar` — marca ticket como usado si es válido
-- `GET /api/ticket/:id/pdf` — descarga PDF del ticket
+- **POST /api/ticket/validar** — marca ticket como usado si es válido
+- **GET /api/ticket/:id/pdf** — descarga PDF del ticket
 
 ### Panel administrativo
-- `GET /api/admin/dashboard` — métricas generales
-- `GET /api/admin/tickets?usados=false|true` — lista de tickets filtrados
-- `GET /api/admin/eventos` — estadísticas por evento
+- **GET /api/admin/dashboard** — métricas generales
+- **GET /api/admin/tickets?usados=false|true** — lista de tickets filtrados
+- **GET /api/admin/eventos** — estadísticas por evento
 
 ### Reportes
-- `GET /api/reportes/eventos/:id/pdf` — exporta listado de compradores de un evento en PDF
+- **GET /api/reportes/eventos/:id/pdf** — exporta listado de compradores de un evento en PDF
 
 ---
 
 ### 🧾 Modelos de datos
 
 #### Cupon
-- `codigo` (único, uppercase), `porcentaje`, `activo` (booleano)
+- **CODIGO** (único, uppercase), **PORCENTAJE**, **ACTIVO** (booleano)
 - Timestamps para trazabilidad
 
 #### Evento
-- `nombre`, `descripcion`, `fecha`, `lugar`, `direccion`, `localidad`, `imagen`, `estado`
-- `entradas`: array con `tipo`, `precio`, `stock`
+- **NOMBRE**, **DESCRIPCION**, **FECHA**, **LUGAR**, **DIRECCION**, **LOCALIDAD**, **IMAGEN**, **ESTADO**
+- **ENTRADAS**: Lista con **TIPO**, **PRECIO**, **STOCK**
 
 #### Orden
-- `evento_id` (referencia a Evento)
-- `cliente`: `nombre`, `apellido`, `dni`, `email`
-- `items`: `tipo`, `cantidad`, `precio_unitario`
-- `total`, `descuento`, `codigo_descuento`, `estado`
+- **EVENTO_ID** (referencia a Evento)
+- **CLIENTE**: **NOMBRE**, **APELLIDO**, **DNI**, **EMAIL**
+- **ITEMS**: **TIPO**, **CANTIDAD**, **PRECIO_UNITARIO**
+- **TOTAL**, **DESCUENTO**, **CODIGO_DESCUENTO**, **ESTADO**
 
 #### Ticket
-- `orden_id`, `evento_id`
-- `tipo`
-- `qr_code`
-- `usado`
+- **ORDEN_ID**, **EVENTO_ID**
+- **TIPO** (Ej: General, VIP)
+- **QR_CODE** (Datos del código)
+- **ESTADO_USADO** (Si ya ingresó)
 
 ---
 
 ## 🔧 Flujos importantes
 
 ### Compra normal
-1. El frontend carga eventos desde `GET /eventos`.
+1. El frontend carga eventos desde **GET /eventos**.
 2. El usuario elige evento, completa datos y crea orden.
 3. Backend crea orden en Mongo y genera preference en MercadoPago.
 4. El usuario paga en MercadoPago y regresa a la app.
-5. MercadoPago envía webhook a `/mp/webhook`.
+5. MercadoPago envía webhook a **/mp/webhook**.
 6. Backend marca orden como pagada, crea tickets y envía email con el PDF.
 
 ### Validación de ticket
-1. El scanner o admin envía `ticketId` a `POST /api/ticket/validar`.
+1. El scanner o admin envía el **ID del Ticket** a la ruta **POST /api/ticket/validar**.
 2. Si el ticket existe y no fue usado, se marca como usado.
 
 ---
 
 ## 📌 Notas
 
-- El frontend es estático y se sirve desde `backend/server.js`.
-- El archivo `frontend/public/assets/images/branding/nexo_logo_transparente.png` se usa en PDFs.
-- El email envía un enlace a `BASE_URL/api/orden/ticket/:id/pdf` para descargar el ticket.
-- Si necesitas pruebas de webhook en desarrollo, usa `ngrok` o una solución similar.
+- El frontend es estático y se sirve desde **backend/server.js**.
+- El archivo **frontend/public/assets/images/branding/nexo_logo_transparente.png** se usa en PDFs.
+- El email envía un enlace a **BASE_URL/api/orden/ticket/:id/pdf** para descargar el ticket.
+- Si necesitas pruebas de webhook en desarrollo, usa **ngrok** o una solución similar.
 
 ---
 
 ## 🧪 Observaciones adicionales
 
-- El sistema usa un **sistema de cupones dinámico** gestionado en la base de datos (Colección `cupones`).
-- El sistema guarda órdenes en estado `pendiente` y solo genera tickets cuando MercadoPago confirma el pago.
-- El backend usa `express.static` para servir `frontend` y `frontend/public/assets`.
+- El sistema usa un **sistema de cupones dinámico** gestionado en la base de datos (Colección **cupones**).
+- El sistema guarda órdenes en estado **PENDIENTE** y solo genera tickets cuando MercadoPago confirma el pago.
+- El backend usa **express.static** para servir el **frontend** y las carpetas de **assets**.
 
 ---
 
-## 📦 Dependencias clave
+## 📦 Librerías Principales
 
-```json
-{
-  "dependencies": {
-    "cors": "^2.8.6",
-    "dotenv": "^16.6.1",
-    "express": "^4.22.2",
-    "helmet": "^8.1.0",
-    "mercadopago": "^2.12.0",
-    "mongodb": "^7.1.1",
-    "mongoose": "^8.23.1",
-    "nodemailer": "^8.0.7",
-    "pdfkit": "^0.18.0",
-    "qrcode": "^1.5.4"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.14"
-  }
-}
-```
+El sistema utiliza las siguientes herramientas para garantizar el funcionamiento:
+
+*   **EXPRESS / CORS / HELMET**: Servidor web y seguridad.
+*   **MONGOOSE / MONGODB**: Gestión de base de datos.
+*   **MERCADOPAGO**: Procesamiento de pagos.
+*   **NODEMAILER**: Envío de correos electrónicos.
+*   **PDFKIT**: Generación de tickets y reportes.
+*   **QRCODE**: Creación de códigos para acreditación.
+*   **DOTENV**: Configuración de variables de entorno.
 
 ---
 
@@ -288,18 +276,12 @@ Para dudas o mejoras, me podes enviar un mail a moliaaaj@gmail.com.
 
 [Ngrok Official Website](https://ngrok.com?utm_source=chatgpt.com)
 
-Ejecutar:
+> **COMANDO NGROK:** ngrok http 3000
 
-```bash
-ngrok http 3000
-```
+**ACTUALIZAR .ENV CON LA URL DE NGROK:**
 
-Actualizar `.env`:
-
-```env
-BASE_URL=https://xxxxx.ngrok-free.app
-FRONT_URL=https://xxxxx.ngrok-free.app
-```
+*   **BASE_URL** = https://xxxxx.ngrok-free.app
+*   **FRONT_URL** = https://xxxxx.ngrok-free.app
 
 ---
 
@@ -313,11 +295,9 @@ Para envío de emails:
 ## Generar:
 - App Password
 
-Usar esa password en:
+**CONFIGURAR EN .ENV:**
 
-```env
-EMAIL_PASS=
-```
+*   **EMAIL_PASS** = (Pegar aquí la contraseña de aplicación generada)
 
 NO usar la contraseña normal de Gmail.
 
@@ -354,20 +334,12 @@ Se generan automáticamente:
 
 Cada ticket contiene:
 
-- ID único
-- Estado usado/no usado
+- **ID UNICO DE CONTROL**
+- **ESTADO DE USO**
 
 El scanner marca:
-
-```txt
-Ticket válido
-```
-
-o
-
-```txt
-Ticket ya usado
-```
+*   **TICKET VALIDO**: El cliente puede pasar.
+*   **TICKET YA USADO**: El sistema bloquea el ingreso.
 
 ---
 
@@ -403,23 +375,13 @@ Más adelante migrar a:
 # 🛠️ COMANDOS ÚTILES
 
 ## Reiniciar backend
-
-```bash
-CTRL + C
-npm run dev
-```
+> **ACCION:** Presionar **CTRL + C** y luego ejecutar **npm run dev**
 
 ## Ver logs Mongo
-
-```bash
-mongosh
-```
+> **COMANDO:** mongosh
 
 ## Probar API
-
-```bash
-http://localhost:3000/eventos
-```
+> **URL DE PRUEBA:** http://localhost:3000/eventos
 
 ---
 
