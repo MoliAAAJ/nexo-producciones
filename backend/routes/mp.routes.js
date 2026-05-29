@@ -1,6 +1,7 @@
 "use strict";
 
 import express from "express";
+import mongoose from "mongoose";
 
 import {
   MercadoPagoConfig,
@@ -100,11 +101,17 @@ router.post("/webhook", async (req, res) => {
       return res.sendStatus(200);
     }
 
+    // Intentamos buscar si ya existe una orden que procesó este pago exacto
+    const ordenExistente = await Orden.findOne({ mp_payment_id: paymentId });
+    if (ordenExistente) {
+      console.log("⚠ Este pago ya fue procesado anteriormente");
+      return res.sendStatus(200);
+    }
+
     /**
-     * 📦 ORDEN
+     * 📦 OBTENER ORDEN ORIGINAL
      */
-    const orden = await Orden.findById(orderId)
-      .populate("evento_id");
+    const orden = await Orden.findById(orderId).populate("evento_id");
 
     if (!orden) {
       console.log("❌ Orden no encontrada");
@@ -114,7 +121,7 @@ router.post("/webhook", async (req, res) => {
     /**
      * 🚫 DUPLICADO
      */
-    if (orden.estado === "pagado") {
+    if (orden.estado === "pagado" || orden.mp_status === "approved") {
       console.log("⚠ Orden ya pagada");
       return res.sendStatus(200);
     }
@@ -169,37 +176,37 @@ router.post("/webhook", async (req, res) => {
     await evento.save();
 
     /**
-     * ✅ MARCAR PAGADO
+     * ✅ ACTUALIZAR ORDEN (Con info de pago)
      */
     orden.estado = "pagado";
+    orden.mp_payment_id = paymentId;
+    orden.mp_status = paymentData.status;
     await orden.save();
 
     /**
      * 🎟️ GENERAR TICKETS
      */
-    const ticketsGenerados = [];
+    const ticketsParaInsertar = [];
 
     for (const item of orden.items) {
-
-      const evento = orden.evento_id;
-
       for (let i = 0; i < item.cantidad; i++) {
-
-        const ticket = new Ticket({
+        ticketsParaInsertar.push({
           orden_id: orden._id,
           evento_id: evento._id,
           tipo: item.tipo,
           usado: false
         });
-
-        ticket.qr_code = await generarQR(ticket._id);
-
-        await ticket.save();
-
-        ticketsGenerados.push(ticket);
       }
     }
 
+    // Generamos los IDs y QRs antes de insertar
+    for (const t of ticketsParaInsertar) {
+      const tempId = new mongoose.Types.ObjectId();
+      t._id = tempId;
+      t.qr_code = await generarQR(tempId);
+    }
+
+    const ticketsGenerados = await Ticket.insertMany(ticketsParaInsertar);
     console.log("🎟️ Tickets generados correctamente");
 
     /**

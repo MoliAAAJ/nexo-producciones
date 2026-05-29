@@ -6,13 +6,17 @@ import Orden from "../models/Orden.js";
 
 const router = express.Router();
 
-const ADMIN_USER = process.env.ADMIN_USER || "nexo";
-const ADMIN_PASS = process.env.ADMIN_PASS || "procar#43";
+const ADMIN_USER = process.env.ADMIN_USER;
+const ADMIN_PASS = process.env.ADMIN_PASS;
 
 function isAuthorized(req) {
   const authHeader = req.headers.authorization || "";
 
   if (!authHeader.startsWith("Basic ")) {
+    return false;
+  }
+
+  if (!ADMIN_USER || !ADMIN_PASS) {
     return false;
   }
 
