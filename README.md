@@ -142,11 +142,17 @@ nexo-producciones/
 
 **CONFIGURACIÓN (.env):**
 PORT=3000
+
 MONGO_URI=mongodb+srv://<usuario>:<password>@cluster.xxxx.mongodb.net/nexo
+
 BASE_URL=http://localhost:3000
+
 FRONT_URL=http://localhost:3000
+
 MERCADOPAGO_ACCESS_TOKEN=TEST-XXXXXXXX
+
 EMAIL_USER=tucorreo@gmail.com
+
 EMAIL_PASS=xxxxxxxx
 
 > Usa credenciales válidas de MercadoPago y Gmail para pruebas. Si usas Gmail, habilita el acceso seguro o App Password si estás con 2FA.
