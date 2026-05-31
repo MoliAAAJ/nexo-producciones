@@ -113,21 +113,27 @@ router.post("/webhook", async (req, res) => {
       return res.sendStatus(200);
     }
 
-    /**
-     * 📦 OBTENER ORDEN ORIGINAL
-     */
-    const orden = await Orden.findById(orderId).populate("evento_id");
+    // Intentamos actualizar la orden de forma atómica.
+    // Solo procedemos SI el estado actual es 'pendiente'.
+    // Esto garantiza que solo una de las peticiones paralelas continúe.
+    const orden = await Orden.findOneAndUpdate(
+      { 
+        _id: orderId, 
+        estado: "pendiente" 
+      },
+      { 
+        $set: { 
+          estado: "pagado",
+          mp_payment_id: paymentId,
+          mp_status: paymentData.status
+        } 
+      },
+      { new: true }
+    ).populate("evento_id");
 
     if (!orden) {
-      console.log("❌ Orden no encontrada");
-      return res.sendStatus(200);
-    }
-
-    /**
-     * 🚫 DUPLICADO
-     */
-    if (orden.estado === "pagado" || orden.mp_status === "approved") {
-      console.log("⚠ Orden ya pagada");
+      // Si no devuelve la orden, es porque el ID no existe o ya fue marcada como pagada por otra petición.
+      console.log("⚠ Orden ya procesada o no encontrada. Abortando duplicado.");
       return res.sendStatus(200);
     }
 
@@ -179,14 +185,6 @@ router.post("/webhook", async (req, res) => {
     }
 
     await evento.save();
-
-    /**
-     * ✅ ACTUALIZAR ORDEN (Con info de pago)
-     */
-    orden.estado = "pagado";
-    orden.mp_payment_id = paymentId;
-    orden.mp_status = paymentData.status;
-    await orden.save();
 
     /**
      * 🎟️ GENERAR TICKETS

@@ -71,7 +71,8 @@ const ordenSchema = new mongoose.Schema(
 
     mp_payment_id: {
       type: String,
-      index: true
+      unique: true,
+      sparse: true
     },
 
     mp_status: {
