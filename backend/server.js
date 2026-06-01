@@ -39,6 +39,12 @@ app.use(cors({
 
 app.use(express.json());
 
+// Logger para ver qué peticiones llegan al servidor
+app.use((req, res, next) => {
+  console.log(`📡 Solicitud recibida: ${req.method} ${req.url}`);
+  next();
+});
+
 /* =========================
    🧠 STATIC FILES FRONTEND
 ========================= */
