@@ -65,12 +65,14 @@ app.use("/api/reportes", reportesRoutes);
 
 /* 📡 EVENTOS API */
 app.get("/api/eventos", async (req, res) => {
+  console.log("🔍 Intentando obtener eventos desde la DB...");
   try {
     const eventos = await Evento.find();
+    console.log(`✅ Eventos encontrados: ${eventos.length}`);
     res.json(eventos);
   } catch (error) {
-    console.error("Error al obtener eventos:", error);
-    res.status(500).json({ error: "Error cargando eventos" });
+    console.error("❌ Error en GET /api/eventos:", error.message);
+    res.status(500).json({ error: "Error cargando eventos", debug: error.message });
   }
 });
 
@@ -91,9 +93,14 @@ const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {
+    // Intentar obtener la IP pública para depuración
+    const ipResponse = await fetch('https://api.ipify.org?format=json').catch(() => null);
+    const ipData = ipResponse ? await ipResponse.json() : { ip: 'Desconocida' };
+    
     await connectDB();
     app.listen(PORT, () => {
       console.log(`🔥 Server running on http://localhost:${PORT}`);
+      console.log(`🌍 Server Public IP: ${ipData.ip}`);
       console.log("🌐 FRONT_URL =", process.env.FRONT_URL || "Not set (using localhost)");
     });
   } catch (error) {
