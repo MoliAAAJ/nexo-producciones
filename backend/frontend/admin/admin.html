@@ -33,8 +33,6 @@
 
   <script>
     const API = window.location.origin;
-    const ADMIN_USER = "nexo";
-    const ADMIN_PASS = "procar#43";
     const SESSION_KEY = "nexo_admin_session";
 
     const state = {
@@ -43,20 +41,25 @@
       dashboard: {}
     };
 
+    let adminCredentials = null; // Guardar credenciales para revalidar
+
     function isAuthenticated() {
       return sessionStorage.getItem(SESSION_KEY) === "1";
     }
 
-    function setAuthenticated() {
+    function setAuthenticated(usuario, password) {
       sessionStorage.setItem(SESSION_KEY, "1");
+      adminCredentials = { usuario, password };
     }
 
     function clearAuthenticated() {
       sessionStorage.removeItem(SESSION_KEY);
+      adminCredentials = null;
     }
 
     function getAuthHeaders() {
-      const token = btoa(`${ADMIN_USER}:${ADMIN_PASS}`);
+      if (!adminCredentials) return {};
+      const token = btoa(`${adminCredentials.usuario}:${adminCredentials.password}`);
       return { Authorization: `Basic ${token}` };
     }
 
@@ -173,20 +176,48 @@
 
       const form = document.getElementById("loginForm");
       const error = document.getElementById("loginError");
+      const submitBtn = form.querySelector("button[type='submit']");
 
-      form.addEventListener("submit", (event) => {
+      form.addEventListener("submit", async (event) => {
         event.preventDefault();
         const usuario = document.getElementById("usuario").value.trim();
         const password = document.getElementById("password").value;
 
-        if (usuario === ADMIN_USER && password === ADMIN_PASS) {
-          setAuthenticated();
-          renderDashboardPage();
+        if (!usuario || !password) {
+          error.textContent = "Usuario y contraseña son requeridos";
+          error.classList.remove("hidden");
           return;
         }
 
-        error.textContent = "Usuario o contraseña incorrectos";
-        error.classList.remove("hidden");
+        // Deshabilitar botón
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Validando...";
+
+        try {
+          // Validar credenciales en el backend
+          const res = await fetch(`${API}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ usuario, password })
+          });
+
+          if (res.ok) {
+            setAuthenticated(usuario, password);
+            renderDashboardPage();
+            return;
+          }
+
+          error.textContent = "Usuario o contraseña incorrectos";
+          error.classList.remove("hidden");
+
+        } catch (err) {
+          console.error(err);
+          error.textContent = "Error al conectar con el servidor";
+          error.classList.remove("hidden");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Ingresar";
+        }
       });
     }
 

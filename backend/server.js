@@ -82,6 +82,33 @@ app.get("/api/eventos", async (req, res) => {
   }
 });
 
+/* 🔐 AUTH LOGIN */
+app.post("/api/auth/login", (req, res) => {
+  try {
+    const { usuario, password } = req.body;
+
+    if (!usuario || !password) {
+      return res.status(400).json({ error: "Usuario y contraseña son requeridos" });
+    }
+
+    // Validar contra variables de entorno
+    const ADMIN_USER = process.env.ADMIN_USER;
+    const ADMIN_PASS = process.env.ADMIN_PASS;
+
+    if (usuario === ADMIN_USER && password === ADMIN_PASS && ADMIN_USER && ADMIN_PASS) {
+      console.log(`✅ Login exitoso para usuario: ${usuario}`);
+      return res.json({ ok: true, message: "Autenticación correcta" });
+    }
+
+    console.warn(`⚠️ Intento de login fallido para usuario: ${usuario}`);
+    return res.status(401).json({ error: "Credenciales incorrectas" });
+
+  } catch (error) {
+    console.error("❌ Error en login:", error.message);
+    res.status(500).json({ error: "Error en el servidor" });
+  }
+});
+
 /* =========================
    🚨 SPA FALLBACK
 ========================= */
