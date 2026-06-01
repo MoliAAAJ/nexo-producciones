@@ -49,10 +49,10 @@ app.use((req, res, next) => {
    🧠 STATIC FILES FRONTEND
 ========================= */
 
-app.use(express.static(path.join(__dirname, "frontend/pages")));
+// 🟡 SERVIR TODA LA CARPETA FRONTEND (JS, STYLES, PAGES, ETC)
+app.use(express.static(path.join(__dirname, "frontend")));
 
-/* 🔵 ASSETS DEL FRONTEND (IMÁGENES, ICONOS, ETC) */
-
+// 🔵 ASSETS DEL FRONTEND (IMÁGENES, ICONOS, ETC)
 app.use("/assets", express.static(path.join(__dirname, "frontend/public/assets")));
 
 /* 🟢 ASSETS ESPECÍFICOS DEL BACKEND (OPCIONAL) */
