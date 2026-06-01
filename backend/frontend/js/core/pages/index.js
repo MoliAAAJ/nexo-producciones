@@ -78,6 +78,30 @@ function getImagen(ev) {
 }
 
 /**
+ * 🔄 ORDENAR EVENTOS POR ESTADO
+ * Disponibles primero, finalizados después
+ */
+function ordenarEventosPorEstado(lista) {
+  const ahora = Date.now();
+  
+  return [...lista].sort((a, b) => {
+    // Determinar estado de cada evento
+    const aFinalizado = String(a.estado || "") === "finalizado" || 
+                       new Date(a.fecha).getTime() < ahora;
+    const bFinalizado = String(b.estado || "") === "finalizado" || 
+                       new Date(b.fecha).getTime() < ahora;
+    
+    // Disponibles primero (false), finalizados después (true)
+    if (aFinalizado !== bFinalizado) {
+      return aFinalizado ? 1 : -1;
+    }
+    
+    // Dentro del mismo estado, ordenar por fecha
+    return new Date(a.fecha).getTime() - new Date(b.fecha).getTime();
+  });
+}
+
+/**
  * 🎨 RENDER EVENTOS
  */
 function render(lista) {
@@ -88,10 +112,13 @@ function render(lista) {
 
   console.log("🎨 Renderizando lista de eventos:", lista.length);
 
+  // Ordenar eventos por estado
+  const listaOrdenada = ordenarEventosPorEstado(lista);
+
   // Calculamos solo los que no están finalizados para el contador
   if (cantidad) {
     const ahora = Date.now();
-    const disponibles = lista.filter(ev => {
+    const disponibles = listaOrdenada.filter(ev => {
       const isFinalizado = String(ev.estado || "") === "finalizado" || 
                            new Date(ev.fecha).getTime() < ahora;
       return !isFinalizado;
@@ -101,7 +128,7 @@ function render(lista) {
 
   contenedor.innerHTML = "";
 
-  lista.forEach(ev => {
+  listaOrdenada.forEach(ev => {
     const card = document.createElement("div");
 
     card.className = 
@@ -174,10 +201,13 @@ function render(lista) {
 window.filtrarCategoria = function (cat) {
   categoriaActual = cat;
 
-  const filtrados =
+  let filtrados =
     cat === "Todos"
       ? eventos
       : eventos.filter(e => e.categoria === cat);
 
+  // Ordenar los eventos filtrados por estado
+  filtrados = ordenarEventosPorEstado(filtrados);
+  
   render(filtrados);
 };
