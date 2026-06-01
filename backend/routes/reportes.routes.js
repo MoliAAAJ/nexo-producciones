@@ -1,9 +1,13 @@
 import express from "express";
 import PDFDocument from "pdfkit";
 import path from "path";
+import { fileURLToPath } from "url";
 import Evento from "../models/Evento.js";
 import Orden from "../models/Orden.js";
 import { isAdmin } from "../middleware/auth.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
@@ -56,7 +60,7 @@ router.get("/eventos/:id/pdf", async (req, res) => {
     doc.pipe(res);
 
     const logoPath = path.join(
-      process.cwd(),
+      __dirname,
       "../frontend/public/assets/images/branding/nexo_logo_transparente.png"
     );
 
