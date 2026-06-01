@@ -32,7 +32,8 @@ async function cargarEventos() {
   try {
     const API = window.location.origin;
 
-    const res = await fetch(`${API}/eventos`);
+    // Ajustamos la ruta para que coincida con app.get("/api/eventos") en server.js
+    const res = await fetch(`${API}/api/eventos`);
     eventos = await res.json();
     console.log("📦 Eventos recibidos:", eventos);
 
