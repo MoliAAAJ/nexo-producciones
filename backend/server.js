@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config({
-  path: path.join(__dirname, ".env")
+  path: path.join(__dirname, ".env"),
 });
 
 import express from "express";
@@ -25,9 +25,10 @@ import reportesRoutes from "./routes/reportes.routes.js";
 
 const app = express();
 
-/**
- * 🌐 CORS
- */
+/* =========================
+   🔐 MIDDLEWARES BASE
+========================= */
+
 app.use(cors({
   origin: [
     "http://localhost:3000",
@@ -38,14 +39,12 @@ app.use(cors({
 
 app.use(express.json());
 
-/**
- * 🧠 STATIC FRONTEND (BASE)
- */
+/* =========================
+   🧠 STATIC FILES FRONTEND
+========================= */
+
 app.use(express.static(path.join(__dirname, "../frontend/pages")));
 
-/**
- * 🖼️ ASSETS PARA IMÁGENES
- */
 app.use(
   "/assets",
   express.static(
@@ -53,18 +52,20 @@ app.use(
   )
 );
 
-/**
- * 🔌 API ROUTES
- */
+/* =========================
+   🔌 API ROUTES
+========================= */
+
 app.use("/api/orden", ordenRoutes);
 app.use("/mp", mpRoutes);
 app.use("/api/ticket", ticketRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/reportes", reportesRoutes);
 
-/**
- * 📡 EVENTOS API
- */
+/* =========================
+   📡 EVENTOS API
+========================= */
+
 app.get("/eventos", async (req, res) => {
   try {
     const eventos = await Evento.find();
@@ -74,23 +75,26 @@ app.get("/eventos", async (req, res) => {
   }
 });
 
-/**
- * 🚨 SPA FALLBACK (ÚLTIMO SIEMPRE)
- */
+/* =========================
+   🚨 SPA FALLBACK
+========================= */
+
 app.get("*", (req, res) => {
   res.sendFile(
     path.join(__dirname, "../frontend/pages/index.html")
   );
 });
 
-/**
- * 🔥 DB
- */
+/* =========================
+   🔥 DB CONNECT
+========================= */
+
 connectDB();
 
-/**
- * 🚀 SERVER
- */
+/* =========================
+   🚀 SERVER START
+========================= */
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
