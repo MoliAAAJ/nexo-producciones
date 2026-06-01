@@ -1,4 +1,4 @@
-# 🎟️ NEXO Producciones
+# 🎟️ NEXOPass
 
 Sistema de venta de entradas online con frontend estático, backend en Node.js/Express, base de datos MongoDB y pasarela de pago MercadoPago.
 
