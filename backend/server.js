@@ -43,14 +43,15 @@ app.use(express.json());
    🧠 STATIC FILES FRONTEND
 ========================= */
 
-app.use(express.static(path.join(__dirname, "../frontend/pages")));
+app.use(express.static(path.join(__dirname, "frontend/pages")));
 
-app.use(
-  "/assets",
-  express.static(
-    path.join(__dirname, "../frontend/public/assets")
-  )
-);
+/* 🔵 ASSETS DEL FRONTEND (IMÁGENES, ICONOS, ETC) */
+
+app.use("/assets", express.static(path.join(__dirname, "frontend/public/assets")));
+
+/* 🟢 ASSETS ESPECÍFICOS DEL BACKEND (OPCIONAL) */
+
+app.use("/backend-static", express.static(path.join(__dirname, "assets")));
 
 /* =========================
    🔌 API ROUTES
@@ -62,15 +63,13 @@ app.use("/api/ticket", ticketRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/reportes", reportesRoutes);
 
-/* =========================
-   📡 EVENTOS API
-========================= */
-
-app.get("/eventos", async (req, res) => {
+/* 📡 EVENTOS API */
+app.get("/api/eventos", async (req, res) => {
   try {
     const eventos = await Evento.find();
     res.json(eventos);
   } catch (error) {
+    console.error("Error al obtener eventos:", error);
     res.status(500).json({ error: "Error cargando eventos" });
   }
 });
@@ -81,23 +80,26 @@ app.get("/eventos", async (req, res) => {
 
 app.get("*", (req, res) => {
   res.sendFile(
-    path.join(__dirname, "../frontend/pages/index.html")
+    path.join(__dirname, "frontend/pages/index.html")
   );
 });
 
 /* =========================
    🔥 DB CONNECT
 ========================= */
-
-connectDB();
-
-/* =========================
-   🚀 SERVER START
-========================= */
-
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`🔥 Server running on ${PORT}`);
-  console.log("🌐 FRONT_URL =", process.env.FRONT_URL);
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`🔥 Server running on http://localhost:${PORT}`);
+      console.log("🌐 FRONT_URL =", process.env.FRONT_URL || "Not set (using localhost)");
+    });
+  } catch (error) {
+    console.error("❌ Error starting server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
