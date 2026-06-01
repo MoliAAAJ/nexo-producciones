@@ -41,7 +41,7 @@ app.use(express.json());
 /**
  * 🧠 STATIC FRONTEND (BASE)
  */
-app.use(express.static(path.join(__dirname, "../frontend")));
+app.use(express.static(path.join(__dirname, "../frontend/pages")));
 
 /**
  * 🖼️ ASSETS PARA IMÁGENES
