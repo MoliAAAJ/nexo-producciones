@@ -16,7 +16,7 @@ export const generarPDF = (ticket, orden) => {
 
     const logoPath = path.join(
       __dirname,
-      "../../frontend/public/assets/images/branding/nexo_logo_transparente.png"
+      "../frontend/public/assets/images/branding/nexo_logo_transparente.png"
     );
 
     const buffers = [];
@@ -310,7 +310,7 @@ export const generarPDF = (ticket, orden) => {
       .fontSize(8)
       .fillColor("#6b7280")
       .text(
-        "NEXO Tickets • Powered by Mercado Pago",
+        "NEXOPass • Powered by Mercado Pago",
         40,
         doc.y,
         {
