@@ -16,7 +16,7 @@ export const generarPDF = (ticket, orden) => {
 
     const logoPath = path.join(
       __dirname,
-      "../frontend/public/assets/images/branding/nexo_logo_transparente.png"
+      "../assets/logo.png"
     );
 
     const buffers = [];

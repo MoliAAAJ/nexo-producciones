@@ -61,7 +61,7 @@ router.get("/eventos/:id/pdf", async (req, res) => {
 
     const logoPath = path.join(
       __dirname,
-      "../frontend/public/assets/images/branding/nexo_logo_transparente.png"
+      "../assets/logo.png"
     );
 
     try {
