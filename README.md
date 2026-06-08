@@ -93,32 +93,32 @@ nexo-producciones/
 │   ├── seed_cupones.mongodb.js
 │   ├── package.json
 │   └── server.js
-├── frontend/
-│   ├── admin/
-│   │   └── dashboard.html
-│   ├── components/
-│   │   ├── header.html
-│   │   └── footer.html
-│   ├── js/
-│   │   ├── core/
-│   │   │   └── api.js
-│   │   └── pages/
-│   │       ├── admin.js
-│   │       ├── checkout.js
-│   │       └── home.js
-│   ├── pages/
-│   │   ├── index.html
-│   │   └── evento.html
-│   ├── payments/
-│   │   ├── success.html
-│   │   └── pending.html
-│   ├── public/
-│   │   └── assets/
-│   │       └── images/
-│   │           └── branding/
-│   │               └── nexo_logo_transparente.png
-│   └── styles/
-│       └── tailwind-custom.css
+├   └──frontend/
+│       ├── admin/
+│       │   └── dashboard.html
+│       ├── components/
+│       │   ├── header.html
+│       │   └── footer.html
+│       ├── js/
+│       │   ├── core/
+│       │   │   └── api.js
+│       │   └── pages/
+│       │       ├── admin.js
+│       │       ├── checkout.js
+│       │       └── home.js
+│       ├── pages/
+│       │   ├── index.html
+│       │   └── evento.html
+│       ├── payments/
+│       │   ├── success.html
+│       │   └── pending.html
+│       ├── public/
+│       │   └── assets/
+│       │       └── images/
+│       │           └── branding/
+│       │               └── nexo_logo_transparente.png
+│       └── styles/
+│           └── tailwind-custom.css
 └── README.md
 ```
 
