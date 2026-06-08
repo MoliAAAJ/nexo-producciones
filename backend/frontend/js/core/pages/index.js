@@ -123,7 +123,7 @@ function render(lista) {
                            new Date(ev.fecha).getTime() < ahora;
       return !isFinalizado;
     }).length;
-    cantidad.innerText = `${disponibles} eventos disponibles`;
+    cantidad.innerText = `${disponibles} evento/s disponible/s`;
   }
 
   contenedor.innerHTML = "";
