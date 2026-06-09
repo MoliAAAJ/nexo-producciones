@@ -183,23 +183,15 @@
    */
   const html5QrCode = new Html5Qrcode("reader");
 
-  Html5Qrcode.getCameras()
-    .then(devices => {
-
-      if (!devices || devices.length === 0) {
-        mostrarResultado("❌ No se encontró cámara", "error");
-        return;
-      }
-
-      const cameraId = devices[0].id;
-
-      return html5QrCode.start(
-        cameraId,
-        { fps: 10, qrbox: 250 },
-        onScanSuccess
-      );
-
-    })
+  // Uso facingMode: "environment" para forzar el uso de la cámara trasera
+  html5QrCode.start(
+    { facingMode: "environment" },
+    { 
+      fps: 10, 
+      qrbox: 250 
+    },
+    onScanSuccess
+  )
     .catch(err => {
       console.error(err);
       mostrarResultado("❌ Error iniciando cámara", "error");
