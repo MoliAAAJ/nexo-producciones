@@ -49,11 +49,15 @@
 
     function setAuthenticated(usuario, password) {
       sessionStorage.setItem(SESSION_KEY, "1");
+      sessionStorage.setItem("nexo_admin_user", usuario);
+      sessionStorage.setItem("nexo_admin_pass", password);
       adminCredentials = { usuario, password };
     }
 
     function clearAuthenticated() {
       sessionStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem("nexo_admin_user");
+      sessionStorage.removeItem("nexo_admin_pass");
       adminCredentials = null;
     }
 
@@ -134,7 +138,9 @@
       });
 
       if (!response.ok) {
-        throw new Error("No se pudo generar el PDF");
+        if (response.status === 401) throw new Error("Sesión inválida o expirada");
+        if (response.status === 404) throw new Error("No se encontraron ventas confirmadas para este reporte");
+        throw new Error(`Error en el servidor (${response.status})`);
       }
 
       const blob = await response.blob();
@@ -458,10 +464,10 @@
     }
 
     window.printEventPdf = async function (eventId) {
-      // Verificamos si hay ventas antes de intentar generar el PDF
+      // Buscamos el evento en el estado actual para verificar ventas locales
       const eventoData = state.eventos.find(ev => String(ev.evento?._id) === String(eventId));
       
-      if (!eventoData || Number(eventoData.tickets || 0) === 0) {
+      if (!eventoData || !eventoData.tickets || Number(eventoData.tickets) === 0) {
         return alert("No hay ventas confirmadas para este evento. No hay lista para imprimir.");
       }
 
@@ -469,7 +475,7 @@
         await fetchPdf(eventId);
       } catch (error) {
         console.error(error);
-        alert("No se pudo generar el PDF del evento");
+        alert("Error al generar PDF: " + error.message);
       }
     };
 
@@ -489,6 +495,11 @@
     window.logout = logout;
 
     if (isAuthenticated()) {
+      // Restaurar credenciales para poder autorizar las peticiones de PDF tras recargar
+      adminCredentials = {
+        usuario: sessionStorage.getItem("nexo_admin_user"),
+        password: sessionStorage.getItem("nexo_admin_pass")
+      };
       renderDashboardPage();
     } else {
       renderLogin();
