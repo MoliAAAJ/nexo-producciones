@@ -221,8 +221,8 @@ if (!evento) {
           ${evento.nombre}
         </h1>
 
-        <p class="mt-6 text-gray-300">
-          ${evento.descripcion || "Próximamente más información sobre este evento."}
+        <p class="mt-6 text-gray-300 whitespace-pre-line">
+          ${(evento.descripcion || "Próximamente más información sobre este evento.").replace(/\\n/g, '\n')}
         </p>
 
         <div class="mt-6 text-gray-400 space-y-2">
