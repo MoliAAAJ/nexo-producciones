@@ -241,11 +241,9 @@ if (!evento) {
             }
           </div>
 
-          <div>
-            📍 ${evento.lugar || "Lugar a confirmar"}
-            📌 ${evento.direccion || ""}
-            🌎 ${evento.localidad || ""}
-          </div>
+          <div>📍 ${evento.lugar || "Lugar a confirmar"}</div>
+          ${evento.direccion ? `<div>📌 ${evento.direccion}</div>` : ""}
+          ${evento.localidad ? `<div>🌎 ${evento.localidad}</div>` : ""}
 
         </div>
 

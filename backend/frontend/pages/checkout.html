@@ -441,10 +441,9 @@ function renderEvento() {
         📅 ${fecha} - 🕒 ${hora}
       </p>
 
-      <p class="text-gray-500 mt-2">
-        📍 ${evento.lugar || ""}
-        ${evento.localidad || ""}
-      </p>
+      <p class="text-gray-500 mt-2">📍 ${evento.lugar || "Lugar a confirmar"}</p>
+      ${evento.direccion ? `<p class="text-gray-500">📌 ${evento.direccion}</p>` : ""}
+      ${evento.localidad ? `<p class="text-gray-500">🌎 ${evento.localidad}</p>` : ""}
 
     </div>
   `;
