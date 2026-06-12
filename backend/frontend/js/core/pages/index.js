@@ -134,7 +134,6 @@ function render(lista) {
     card.className = 
       "bg-gray-900 rounded-3xl overflow-hidden border border-white/10 transition shadow-xl";
 
-    const precio = ev.entradas?.[0]?.precio || 0;
     const imagen = getImagen(ev);
 
     // Configuración de la "burbuja" de estado
@@ -171,10 +170,6 @@ function render(lista) {
 
         <p class="text-gray-400 text-sm mt-1">
           ${formatDate(ev.fecha)} — ${ev.lugar || ""}
-        </p>
-
-        <p class="text-yellow-400 mt-2 font-semibold">
-          ${money(precio)}
         </p>
 
         <button
