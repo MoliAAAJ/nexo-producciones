@@ -458,6 +458,13 @@
     }
 
     window.printEventPdf = async function (eventId) {
+      // Verificamos si hay ventas antes de intentar generar el PDF
+      const eventoData = state.eventos.find(ev => String(ev.evento?._id) === String(eventId));
+      
+      if (!eventoData || Number(eventoData.tickets || 0) === 0) {
+        return alert("No hay ventas confirmadas para este evento. No hay lista para imprimir.");
+      }
+
       try {
         await fetchPdf(eventId);
       } catch (error) {
