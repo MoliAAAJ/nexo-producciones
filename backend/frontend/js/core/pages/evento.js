@@ -102,6 +102,16 @@ function renderEvento(container, evento) {
 
   const imagen = getImagen(evento);
 
+  const fecha = new Date(evento.fecha).toLocaleDateString("es-AR");
+  const hora = evento.fecha
+    ? new Date(evento.fecha).toLocaleTimeString("es-AR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
+    : "Horario a confirmar";
+  const precio = entrada?.precio || 0;
+
   container.innerHTML = `
     <div class="grid lg:grid-cols-2 gap-10">
 
@@ -122,9 +132,30 @@ function renderEvento(container, evento) {
           ${nombre}
         </h1>
 
-        <p class="mt-6 text-gray-300">
-          ${descripcion}
+        <p class="mt-6 text-gray-300 whitespace-pre-line">
+          ${descripcion
+            .replace(/\\n/g, '\n')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          }
         </p>
+
+        <div class="mt-6 text-gray-400 space-y-2">
+          <div>📅 ${fecha}</div>
+          <div>🕒 ${hora}</div>
+          <div>📍 ${evento.lugar || "Lugar a confirmar"}</div>
+          ${evento.direccion ? `<div>📌 ${evento.direccion}</div>` : ""}
+          ${evento.localidad ? `<div>🌎 ${evento.localidad}</div>` : ""}
+        </div>
+
+        <div class="mt-8">
+          <p class="text-gray-500 text-sm uppercase tracking-widest">
+            Entradas desde
+          </p>
+
+          <h2 class="text-3xl font-bold text-purple-400 mt-1">
+            $${precio}
+          </h2>
+        </div>
 
         <button
           id="btnComprar"
