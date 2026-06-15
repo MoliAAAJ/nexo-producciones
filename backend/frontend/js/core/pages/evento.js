@@ -135,6 +135,7 @@ function renderEvento(container, evento) {
         <p class="mt-6 text-gray-300 whitespace-pre-line">
           ${descripcion
             .replace(/\\n/g, '\n')
+            .replace(/\*\*\*(.*?)\*\*\*/g, '<strong class="font-black text-white">$1</strong>')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
           }
         </p>
