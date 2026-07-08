@@ -63,6 +63,41 @@
       background: #ff3b3b;
     }
 
+    .details-card {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      display: none;
+      text-align: left;
+    }
+
+    .details-card h2 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+
+    .details-card p {
+      margin: 6px 0;
+      color: #e8e8e8;
+      font-size: 14px;
+    }
+
+    .accept-btn {
+      margin-top: 14px;
+      width: 100%;
+      padding: 12px 14px;
+      border: none;
+      border-radius: 999px;
+      background: #fff;
+      color: #111;
+      font-weight: bold;
+      cursor: pointer;
+      display: none;
+    }
+
   </style>
 
 </head>
@@ -77,6 +112,10 @@
 
     <div id="result" class="result"></div>
 
+    <div id="detailsCard" class="details-card"></div>
+
+    <button id="acceptBtn" class="accept-btn">Aceptar</button>
+
   </div>
 
 <script>
@@ -84,8 +123,11 @@
   const API_URL = window.location.origin;
 
   const resultBox = document.getElementById("result");
+  const detailsCard = document.getElementById("detailsCard");
+  const acceptBtn = document.getElementById("acceptBtn");
 
   let scanning = true;
+  let lastTicketSummary = null;
 
   /**
    * 📢 UI RESULTADO
@@ -96,6 +138,46 @@
     resultBox.className = `result ${tipo}`;
     resultBox.innerHTML = mensaje;
 
+  }
+
+  function mostrarError(mensaje) {
+    mostrarResultado(`❌ ${mensaje}`, "error");
+    acceptBtn.style.display = "block";
+  }
+
+  function resetScannerUI() {
+    detailsCard.style.display = "none";
+    detailsCard.innerHTML = "";
+    acceptBtn.style.display = "none";
+    resultBox.style.display = "none";
+    resultBox.innerHTML = "";
+  }
+
+  function mostrarDetalle(ticketData) {
+    if (!ticketData) return;
+
+    const evento = ticketData.evento || {};
+    const cliente = ticketData.cliente || {};
+
+    detailsCard.innerHTML = `
+      <h2>Datos de la entrada</h2>
+      <p><strong>Evento:</strong> ${evento.nombre || "-"}</p>
+      <p><strong>Fecha:</strong> ${evento.fecha || "-"}</p>
+      <p><strong>Lugar:</strong> ${evento.lugar || "-"}</p>
+      <p><strong>Nombre:</strong> ${cliente.nombreCompleto || "-"}</p>
+      <p><strong>DNI:</strong> ${cliente.dni || "-"}</p>
+      <p><strong>Tipo de entrada:</strong> ${ticketData.tipoEntrada || "-"}</p>
+      <p><strong>Cantidad de tickets:</strong> ${ticketData.cantidadTickets || 1}</p>
+    `;
+
+    detailsCard.style.display = "block";
+    acceptBtn.style.display = "block";
+  }
+
+  function prepararSiguienteEscaneo() {
+    resetScannerUI();
+    scanning = true;
+    lastTicketSummary = null;
   }
 
   /**
@@ -121,6 +203,9 @@
       if (data.ok) {
 
         mostrarResultado("✅ ACCESO PERMITIDO", "success");
+        lastTicketSummary = data.data;
+        mostrarDetalle(lastTicketSummary);
+        acceptBtn.style.display = "block";
 
         if (navigator.vibrate) {
           navigator.vibrate(200);
@@ -128,7 +213,7 @@
 
       } else {
 
-        mostrarResultado("❌ " + (data.message || "Denegado"), "error");
+        mostrarError(data.message || "Denegado");
 
         if (navigator.vibrate) {
           navigator.vibrate([200, 100, 200]);
@@ -159,10 +244,7 @@
 
       if (!data.ticketId) {
 
-        mostrarResultado("❌ QR inválido", "error");
-
-        setTimeout(() => scanning = true, 3000);
-
+        mostrarError("QR inválido");
         return;
       }
 
@@ -170,32 +252,35 @@
 
     } catch (error) {
 
-      mostrarResultado("❌ QR corrupto", "error");
+      mostrarError("QR corrupto");
     }
-
-    setTimeout(() => {
-      scanning = true;
-    }, 3000);
   }
+
+  acceptBtn.addEventListener("click", () => {
+    prepararSiguienteEscaneo();
+  });
 
   /**
    * 📷 INIT CAMERA
    */
   const html5QrCode = new Html5Qrcode("reader");
 
-  // Uso facingMode: "environment" para forzar el uso de la cámara trasera
-  html5QrCode.start(
-    { facingMode: "environment" },
-    { 
-      fps: 10, 
-      qrbox: 250 
-    },
-    onScanSuccess
-  )
-    .catch(err => {
-      console.error(err);
-      mostrarResultado("❌ Error iniciando cámara", "error");
-    });
+  function startScanner() {
+    html5QrCode.start(
+      { facingMode: "environment" },
+      { 
+        fps: 10, 
+        qrbox: 250 
+      },
+      onScanSuccess
+    )
+      .catch(err => {
+        console.error(err);
+        mostrarResultado("❌ Error iniciando cámara", "error");
+      });
+  }
+
+  startScanner();
 
 </script>
 
