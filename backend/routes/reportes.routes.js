@@ -52,9 +52,21 @@ router.get("/eventos/:id/pdf", async (req, res) => {
     const doc = new PDFDocument({ margin: 40 });
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=${evento.nombre}.pdf`
+    // Construir un nombre de archivo seguro para Content-Disposition
+    const rawName = (evento.nombre || "evento").toString();
+    // Remover retornos de carro/nuevas líneas y caracteres de control
+    const safeNameAscii = rawName.replace(/[\r\n\t\0\x00-\x1F\x7F]/g, " ").replace(/\s+/g, " ").trim();
+    // Evitar comillas dobles en el filename
+    const safeName = safeNameAscii.replace(/\"/g, "'");
+    // Crear un fallback ASCII seguro (solo caracteres imprimibles US-ASCII)
+    let asciiFallback = safeName.replace(/[^\x20-\x7E]/g, "").replace(/["'\\/]/g, "").trim();
+    if (!asciiFallback) asciiFallback = "evento";
+
+    // Usar filename* para soportar UTF-8 y filename como fallback ASCII
+    const encodedName = encodeURIComponent(rawName) || "evento";
+
+    res.setHeader("Content-Disposition",
+      `attachment; filename="${asciiFallback}.pdf"; filename*=UTF-8''${encodedName}.pdf`
     );
 
     doc.pipe(res);
