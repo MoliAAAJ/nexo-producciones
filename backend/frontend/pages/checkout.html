@@ -119,8 +119,15 @@
       <!-- ENTRADA -->
       <select
         id="tipoEntrada"
-        class="w-full mb-4 bg-black/40 p-4 rounded-xl"
+        class="w-full bg-black/40 p-4 rounded-xl"
       ></select>
+
+      <p
+        id="tipoEntradaHelp"
+        class="hidden mt-2 mb-4 text-sm text-gray-400"
+      >
+        Si hay más de un tipo de entrada, elegí la opción que prefieras presionando en la flecha del selector.
+      </p>
 
       <!-- CUPON -->
       <input
@@ -459,7 +466,14 @@ function renderEntradas() {
   const select =
     document.getElementById("tipoEntrada");
 
+  const help =
+    document.getElementById("tipoEntradaHelp");
+
   select.innerHTML = "";
+
+  if (help) {
+    help.classList.toggle("hidden", evento.entradas.length <= 1);
+  }
 
   evento.entradas.forEach(e => {
 
