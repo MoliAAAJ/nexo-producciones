@@ -38,7 +38,8 @@ export function formatDate(dateStr) {
   return date.toLocaleDateString("es-AR", {
     day: "2-digit",
     month: "long",
-    year: "numeric"
+    year: "numeric",
+    timeZone: "UTC"
   });
 }
 

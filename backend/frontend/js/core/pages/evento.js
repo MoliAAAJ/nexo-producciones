@@ -102,14 +102,17 @@ function renderEvento(container, evento) {
 
   const imagen = getImagen(evento);
 
-  const fecha = new Date(evento.fecha).toLocaleDateString("es-AR");
-  const hora = evento.fecha
+  const fecha = new Date(evento.fecha).toLocaleDateString("es-AR", {
+    timeZone: "UTC"
+  });
+  const hora = evento.hora || (evento.fecha
     ? new Date(evento.fecha).toLocaleTimeString("es-AR", {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
+        timeZone: "UTC",
       })
-    : "Horario a confirmar";
+    : "Horario a confirmar");
   const precio = entrada?.precio || 0;
 
   container.innerHTML = `

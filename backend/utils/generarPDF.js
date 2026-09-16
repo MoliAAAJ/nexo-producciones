@@ -120,19 +120,20 @@ export const generarPDF = (ticket, orden) => {
       orden.evento_id?.fecha
         ? new Date(
             orden.evento_id.fecha
-          ).toLocaleDateString("es-AR")
+          ).toLocaleDateString("es-AR", { timeZone: "UTC" })
         : "Fecha a confirmar";
 
     const horaEvento =
-      orden.evento_id?.fecha
+      orden.evento_id?.hora || (orden.evento_id?.fecha
         ? new Date(
             orden.evento_id.fecha
           ).toLocaleTimeString("es-AR", {
             hour: "2-digit",
             minute: "2-digit",
-            hour12: false
+            hour12: false,
+            timeZone: "UTC"
           })
-        : "Horario a confirmar";
+        : "Horario a confirmar");
 
     /**
      * 🔢 ITEM ORDEN

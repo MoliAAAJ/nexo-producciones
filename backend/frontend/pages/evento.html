@@ -161,7 +161,9 @@ if (!evento) {
 
 } else {
 
-  const fecha = new Date(evento.fecha).toLocaleDateString("es-AR");
+  const fecha = new Date(evento.fecha).toLocaleDateString("es-AR", {
+    timeZone: "UTC"
+  });
 
   const entrada = evento.entradas?.[0];
   const precio = entrada?.precio || 0;
@@ -238,13 +240,14 @@ if (!evento) {
 
           <div>
             🕒 ${
-              evento.fecha
+              evento.hora || (evento.fecha
                 ? new Date(evento.fecha).toLocaleTimeString("es-AR", {
                     hour: "2-digit",
                     minute: "2-digit",
-                    hour12: false
+                    hour12: false,
+                    timeZone: "UTC"
                   })
-                : "Horario a confirmar"
+                : "Horario a confirmar")
             }
           </div>
 

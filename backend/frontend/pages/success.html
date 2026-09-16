@@ -213,7 +213,7 @@ function renderEvento(orden) {
 
   const fecha =
     new Date(evento.fecha)
-      .toLocaleDateString("es-AR");
+      .toLocaleDateString("es-AR", { timeZone: "UTC" });
 
   const hora =
     evento.hora ||
@@ -224,7 +224,8 @@ function renderEvento(orden) {
         {
           hour: "2-digit",
           minute: "2-digit",
-          hour12: false
+          hour12: false,
+          timeZone: "UTC"
         }
       ) + " hs";
 

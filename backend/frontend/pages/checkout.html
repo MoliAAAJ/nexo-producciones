@@ -424,14 +424,15 @@ function renderEvento() {
 
   const fecha =
     new Date(evento.fecha)
-      .toLocaleDateString("es-AR");
+      .toLocaleDateString("es-AR", { timeZone: "UTC" });
 
   const hora =
-    new Date(evento.fecha)
+    evento.hora || new Date(evento.fecha)
       .toLocaleTimeString("es-AR", {
         hour: "2-digit",
         minute: "2-digit",
-        hour12: false
+        hour12: false,
+        timeZone: "UTC"
       });
 
   document.getElementById("eventoInfo").innerHTML = `
