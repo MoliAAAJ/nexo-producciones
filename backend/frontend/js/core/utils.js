@@ -80,3 +80,13 @@ export function removeClass(el, cls) {
 export function toggleClass(el, cls) {
   if (el) el.classList.toggle(cls);
 }
+
+export function normalizeEventoEstado(evento = {}) {
+  const estado = String(evento.estado || "").trim().toLowerCase();
+
+  if (estado === "finalizado" || estado === "agotado" || estado === "activo") {
+    return estado;
+  }
+
+  return "activo";
+}

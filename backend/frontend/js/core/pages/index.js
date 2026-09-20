@@ -5,7 +5,7 @@
  * Home con blindaje de imágenes y datos
  */
 
-import { formatDate, money } from "../utils.js";
+import { formatDate, money, normalizeEventoEstado } from "../utils.js";
 
 /**
  * 📦 STATE LOCAL
@@ -82,21 +82,15 @@ function getImagen(ev) {
  * Disponibles primero, finalizados después
  */
 function ordenarEventosPorEstado(lista) {
-  const ahora = Date.now();
-  
   return [...lista].sort((a, b) => {
-    // Determinar estado de cada evento
-    const aFinalizado = String(a.estado || "") === "finalizado" || 
-                       new Date(a.fecha).getTime() < ahora;
-    const bFinalizado = String(b.estado || "") === "finalizado" || 
-                       new Date(b.fecha).getTime() < ahora;
-    
-    // Disponibles primero (false), finalizados después (true)
-    if (aFinalizado !== bFinalizado) {
-      return aFinalizado ? 1 : -1;
-    }
-    
-    // Dentro del mismo estado, ordenar por fecha
+    const aEstado = normalizeEventoEstado(a);
+    const bEstado = normalizeEventoEstado(b);
+
+    const ordenEstado = { activo: 0, agotado: 1, finalizado: 2 };
+    const estadoDiff = (ordenEstado[aEstado] ?? 0) - (ordenEstado[bEstado] ?? 0);
+
+    if (estadoDiff !== 0) return estadoDiff;
+
     return new Date(a.fecha).getTime() - new Date(b.fecha).getTime();
   });
 }
@@ -117,12 +111,7 @@ function render(lista) {
 
   // Calculamos solo los que no están finalizados para el contador
   if (cantidad) {
-    const ahora = Date.now();
-    const disponibles = listaOrdenada.filter(ev => {
-      const isFinalizado = String(ev.estado || "") === "finalizado" || 
-                           new Date(ev.fecha).getTime() < ahora;
-      return !isFinalizado;
-    }).length;
+    const disponibles = listaOrdenada.filter(ev => normalizeEventoEstado(ev) === "activo").length;
     cantidad.innerText = `${disponibles} evento/s disponible/s`;
   }
 
@@ -143,12 +132,7 @@ function render(lista) {
       finalizado: { label: "Finalizado", color: "bg-gray-600 opacity-70" }
     };
     
-    // Determinamos el estado real (incluyendo fecha)
-    let estadoReal = ev.estado || "activo";
-    if (estadoReal !== "finalizado" && new Date(ev.fecha).getTime() < Date.now()) {
-      estadoReal = "finalizado";
-    }
-
+    const estadoReal = normalizeEventoEstado(ev);
     const status = statusConfig[estadoReal] || statusConfig.activo;
 
     card.innerHTML = `
