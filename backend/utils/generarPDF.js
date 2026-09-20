@@ -116,20 +116,20 @@ export const generarPDF = (ticket, orden) => {
         .text(txt, x, y + 14);
     };
 
-    const formatDateInArgentina = (dateValue) => {
+    const formatDateInFrontendTimezone = (dateValue) => {
       const date = new Date(dateValue);
       return new Intl.DateTimeFormat("es-AR", {
-        timeZone: "America/Argentina/Buenos_Aires",
+        timeZone: "UTC",
         day: "2-digit",
         month: "2-digit",
         year: "numeric"
       }).format(date);
     };
 
-    const formatTimeInArgentina = (dateValue) => {
+    const formatTimeInFrontendTimezone = (dateValue) => {
       const date = new Date(dateValue);
       return new Intl.DateTimeFormat("es-AR", {
-        timeZone: "America/Argentina/Buenos_Aires",
+        timeZone: "UTC",
         hour: "2-digit",
         minute: "2-digit",
         hour12: false
@@ -138,12 +138,12 @@ export const generarPDF = (ticket, orden) => {
 
     const fechaEvento =
       orden.evento_id?.fecha
-        ? formatDateInArgentina(orden.evento_id.fecha)
+        ? formatDateInFrontendTimezone(orden.evento_id.fecha)
         : "Fecha a confirmar";
 
     const horaEvento =
       orden.evento_id?.hora || (orden.evento_id?.fecha
-        ? formatTimeInArgentina(orden.evento_id.fecha)
+        ? formatTimeInFrontendTimezone(orden.evento_id.fecha)
         : "Horario a confirmar");
 
     /**
