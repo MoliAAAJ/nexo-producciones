@@ -116,23 +116,34 @@ export const generarPDF = (ticket, orden) => {
         .text(txt, x, y + 14);
     };
 
+    const formatDateInArgentina = (dateValue) => {
+      const date = new Date(dateValue);
+      return new Intl.DateTimeFormat("es-AR", {
+        timeZone: "America/Argentina/Buenos_Aires",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      }).format(date);
+    };
+
+    const formatTimeInArgentina = (dateValue) => {
+      const date = new Date(dateValue);
+      return new Intl.DateTimeFormat("es-AR", {
+        timeZone: "America/Argentina/Buenos_Aires",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      }).format(date);
+    };
+
     const fechaEvento =
       orden.evento_id?.fecha
-        ? new Date(
-            orden.evento_id.fecha
-          ).toLocaleDateString("es-AR", { timeZone: "UTC" })
+        ? formatDateInArgentina(orden.evento_id.fecha)
         : "Fecha a confirmar";
 
     const horaEvento =
       orden.evento_id?.hora || (orden.evento_id?.fecha
-        ? new Date(
-            orden.evento_id.fecha
-          ).toLocaleTimeString("es-AR", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-            timeZone: "UTC"
-          })
+        ? formatTimeInArgentina(orden.evento_id.fecha)
         : "Horario a confirmar");
 
     /**
