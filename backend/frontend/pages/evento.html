@@ -212,7 +212,7 @@ if (!evento) {
     <div class="grid lg:grid-cols-2 gap-10">
 
       <img 
-        src="${fixImage(evento.imagen)}" 
+        src="${fixImage(evento.imagen_secundaria || evento.imagen)}"
         class="w-full h-auto rounded-3xl"
       />
 

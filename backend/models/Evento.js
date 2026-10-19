@@ -66,6 +66,11 @@ const eventoSchema = new mongoose.Schema(
       trim: true
     },
 
+    imagen_secundaria: {
+      type: String,
+      trim: true
+    },
+
     estado: {
       type: String,
       enum: ["activo", "agotado", "finalizado"],

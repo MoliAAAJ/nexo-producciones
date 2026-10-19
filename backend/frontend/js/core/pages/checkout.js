@@ -372,7 +372,7 @@ export function initCheckoutPage() {
 
   function getImagen(evento) {
 
-    const img = evento?.imagen;
+    const img = evento?.imagen_secundaria || evento?.imagen;
 
     const fallback =
       "/assets/images/events/nexo_back.jpg";

@@ -426,6 +426,8 @@ function renderEvento() {
     new Date(evento.fecha)
       .toLocaleDateString("es-AR", { timeZone: "UTC" });
 
+  const imagen = fixImage(evento.imagen_secundaria || evento.imagen);
+
   const hora =
     evento.hora || new Date(evento.fecha)
       .toLocaleTimeString("es-AR", {
@@ -440,7 +442,7 @@ function renderEvento() {
     <div>
 
       <img
-        src="/assets/images/events/${evento.imagen}"
+        src="${imagen}"
         class="rounded-2xl mb-6 w-full object-cover"
       />
 
@@ -458,6 +460,13 @@ function renderEvento() {
 
     </div>
   `;
+}
+
+function fixImage(path) {
+  if (!path) return "/assets/images/events/nexo_back.jpg";
+  if (path.startsWith("http")) return path;
+  if (path.startsWith("/assets/")) return path;
+  return `/assets/images/events/${path.replace(/^\/+/, "")}`;
 }
 
 /**
