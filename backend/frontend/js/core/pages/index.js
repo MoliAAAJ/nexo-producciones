@@ -166,8 +166,11 @@ function render(lista) {
 
     // Asignamos la acción solo al botón para evitar que toda la tarjeta sea clickable
     card.querySelector("button").onclick = () => {
-      localStorage.setItem("evento", JSON.stringify(ev));
-      window.location.href = "/pages/evento.html";
+      const id = ev?._id || ev?.id;
+      if (!id) {
+        localStorage.setItem("evento", JSON.stringify(ev));
+      }
+      window.location.href = id ? `/pages/evento.html?id=${encodeURIComponent(id)}` : "/pages/evento.html";
     };
 
     contenedor.appendChild(card);

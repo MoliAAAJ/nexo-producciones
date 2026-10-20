@@ -152,8 +152,11 @@ const App = {
           "bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-transform";
 
         card.onclick = () => {
-          localStorage.setItem("evento", JSON.stringify(ev));
-          window.location.href = "/pages/evento.html";
+          const id = ev?._id || ev?.id;
+          if (!id) {
+            localStorage.setItem("evento", JSON.stringify(ev));
+          }
+          window.location.href = id ? `/pages/evento.html?id=${encodeURIComponent(id)}` : "/pages/evento.html";
         };
 
         card.innerHTML = `

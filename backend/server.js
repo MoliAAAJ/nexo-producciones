@@ -82,6 +82,28 @@ app.get("/api/eventos", async (req, res) => {
   }
 });
 
+app.get("/api/eventos/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const evento = await Evento.findById(id);
+
+    if (!evento) {
+      return res.status(404).json({ error: "Evento no encontrado" });
+    }
+
+    return res.json(evento);
+  } catch (error) {
+    console.error("❌ Error en GET /api/eventos/:id:", error.message);
+
+    if (error?.name === "CastError") {
+      return res.status(404).json({ error: "Evento no encontrado" });
+    }
+
+    return res.status(500).json({ error: "Error cargando evento", debug: error.message });
+  }
+});
+
 /* 🔐 AUTH LOGIN */
 app.post("/api/auth/login", (req, res) => {
   try {

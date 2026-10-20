@@ -92,8 +92,30 @@
 
 <script>
 
-const evento = JSON.parse(localStorage.getItem("evento"));
+const urlParams = new URLSearchParams(window.location.search);
+const eventoId = urlParams.get("id");
+const cachedEvento = JSON.parse(localStorage.getItem("evento") || "null");
 const container = document.getElementById("container");
+
+let evento = cachedEvento;
+
+async function cargarEventoPorId() {
+  if (!eventoId) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/eventos/${encodeURIComponent(eventoId)}`);
+    if (!res.ok) {
+      throw new Error("Evento no encontrado");
+    }
+    evento = await res.json();
+    localStorage.setItem("evento", JSON.stringify(evento));
+  } catch (error) {
+    console.error("Error cargando evento por id:", error);
+    evento = null;
+  }
+}
 
 /**
  * 🧠 HELP SYSTEM GLOBAL
@@ -151,15 +173,19 @@ function estadoEvento(evento) {
 /**
  * 🚨 RENDER
  */
-if (!evento) {
+async function renderEventoPage() {
+  if (eventoId && !evento) {
+    await cargarEventoPorId();
+  }
 
-  container.innerHTML = `
-    <div class="text-center text-red-400 text-2xl">
-      Evento no encontrado
-    </div>
-  `;
-
-} else {
+  if (!evento) {
+    container.innerHTML = `
+      <div class="text-center text-red-400 text-2xl">
+        Evento no encontrado
+      </div>
+    `;
+    return;
+  }
 
   const fecha = new Date(evento.fecha).toLocaleDateString("es-AR", {
     timeZone: "UTC"
@@ -274,6 +300,8 @@ if (!evento) {
     </div>
   `;
 }
+
+renderEventoPage();
 
 /**
  * 🎟️ COMPRA
