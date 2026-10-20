@@ -97,7 +97,7 @@ const eventoId = urlParams.get("id");
 const cachedEvento = JSON.parse(localStorage.getItem("evento") || "null");
 const container = document.getElementById("container");
 
-let evento = cachedEvento;
+let evento = eventoId ? null : cachedEvento;
 
 async function cargarEventoPorId() {
   if (!eventoId) {
